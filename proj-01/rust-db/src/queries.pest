@@ -1,51 +1,55 @@
-﻿alpha = _{ 'a'..'z' | 'A'..'Z' }
-
+﻿// character sets
+alpha = _{ 'a'..'z' | 'A'..'Z' }
 digit = _{ '0'..'9' }
-
+non_zero_digit = _{ '1'..'0' }
 ident_char = _{ alpha | digit | "_" }
+path_char = _{ ident_char | "-" | "." | "/" | "\\" }
 
-double = {  "-"? ~ (digit+ ~ ".")? ~ digit+ }
-
-positive_integer = { !"0" ~ digit* }
-
+// choice sets
 comp_op = { "=" | "!=" | "<=" | "<" | ">=" | ">" }
+decl_type = { "Int" | "Float" | "Bool" | "String" }
+key_type_def = { int | string }
+any_type_def = { int | float | bool | string }
 
-comparison = { ident ~ " " ~ comp_op ~ " " ~ double }
+// database type definitions
+float = { "-"? ~ (digit+ ~ ".")? ~ digit+ }
+int = { "-"? ~ digit+}
+bool = { "true" | "false" }
+string = { "\"" ~ (!"\"" ~ ASCII)* ~ "\"" }
 
+// other type definitions
+positive_int = { "0"* ~ non_zero_digit ~ digit* }
+path = { path_char+ }
+
+// comparison tree
+comparison = { ident ~ " " ~ comp_op ~ " " ~ float }
 comparison_braced = { comparison | "(" ~ comparison_or ~ ")" }
-
 comparison_and = { comparison_braced ~ (" AND " ~ comparison_and)? }
-
 comparison_or = { comparison_and ~ (" OR " ~ comparison_or)? }
 
-ident = { ident_char+ }
-
+// identifiers, declarations and assignments
+ident = { !digit ~ !"_" ~ ident_char+ }
 ident_list = { ident ~ ( ", " ~ ident )* }
-
-decl = { ident ~ ": " ~ ident }
-
+decl = { ident ~ ": " ~ decl_type }
 decl_list = { decl ~ ( ", " ~ decl )* }
-
-assign = { ident ~ " = " ~ ident }
-
+assign = { ident ~ " = " ~ any_type_def }
 assign_list = { assign ~ ( ", " ~ assign )* }
 
+// basic clauses for SELECT
 select_clause = { "SELECT " ~ ident_list }
-
 from_clause = { " FROM " ~ ident }
-
 where_clause = { " WHERE " ~ comparison_or }
-
 order_clause = { " ORDER_BY " ~ ident_list }
+limit_clause = { " LIMIT " ~ positive_int }
 
-limit_clause = { " LIMIT " ~ positive_integer }
-
+// database queries
 select_query = { select_clause ~ from_clause ~ where_clause? ~ order_clause? ~ limit_clause? }
-
-create_query = { "CREATE " ~ ident ~ " KEY " ~ ident ~ " FIELDS " ~ decl_list }
-
+create_query = { "CREATE " ~ ident ~ " KEY " ~ ident ~ (NEWLINE+ ~ "FIELDS " | " FIELDS ") ~ decl_list }
 insert_query = { "INSERT " ~ assign_list ~ " INTO " ~ ident }
+delete_query = { "DELETE " ~ key_type_def ~ " FROM " ~ ident }
+save_query = { "SAVE_AS " ~ path }
+read_query = { "READ_FROM " ~ path }
 
-delete_query = { "DELETE " ~ ident ~ " FROM " ~ ident }
-
-command = { select_query | create_query }
+// main command
+command = { select_query | create_query | insert_query | delete_query | save_query | read_query }
+command_list = { command ~ (NEWLINE+ ~ command)* }
