@@ -1,4 +1,4 @@
-﻿use crate::commands::Command;
+﻿use crate::commands::command::Command;
 
 pub struct DeleteCommand {
 

@@ -1,4 +1,4 @@
-﻿use super::Command;
+﻿use crate::commands::command::Command;
 
 pub struct CreateCommand {
 
