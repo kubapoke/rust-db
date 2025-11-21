@@ -1,4 +1,4 @@
-﻿WHITESPACE = _{ " " | "\t" }
+WHITESPACE = _{ " " | "\t" }
 
 // character sets
 alpha = _{ 'a'..'z' | 'A'..'Z' }
