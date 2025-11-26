@@ -12,7 +12,7 @@ pub enum KeyType {
     Int,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FieldType {
     Bool,
     String,
@@ -76,15 +76,18 @@ pub enum AnyDatabase {
     IntDatabase(Database<i64>),
 }
 
-pub fn get_database(key: KeyType) -> AnyDatabase {
-    match key {
-        KeyType::String => {
-            let db = Database::<String>::new();
-            AnyDatabase::StringDatabase(db)
+impl AnyDatabase {
+    pub fn new(key: KeyType) -> Self {
+        match key {
+            KeyType::String => Self::StringDatabase(Database::new()),
+            KeyType::Int => Self::IntDatabase(Database::new()),
         }
-        KeyType::Int => {
-            let db = Database::<i64>::new();
-            AnyDatabase::IntDatabase(db)
+    }
+
+    pub fn key_type(&self) -> FieldType {
+        match self {
+            AnyDatabase::StringDatabase(_) => FieldType::String,
+            AnyDatabase::IntDatabase(_) => FieldType::Int,
         }
     }
 }

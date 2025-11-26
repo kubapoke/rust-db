@@ -12,4 +12,8 @@ pub enum Error {
     UnknownTokenError(String),
     #[error("MissingTokenError: {0}")]
     MissingTokenError(String),
+    #[error("NotSpecifiedError: {0}")]
+    NotSpecifiedError(String),
+    #[error("TypeError: {0}")]
+    TypeError(String),
 }

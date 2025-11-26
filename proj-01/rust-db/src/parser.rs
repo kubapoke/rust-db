@@ -75,6 +75,13 @@ pub fn parse_create_query<'a>(create_query_pair: Pair<Rule>, database: &'a mut A
     let key = parse_ident(key_pair)?;
     let fields = parse_decl_list(fields_pair)?;
 
+    let key_field_type = fields.get(&key)
+        .ok_or_else(|| Error::NotSpecifiedError("Field type of key was not specified".into()))?;
+
+    if *key_field_type != database.key_type() {
+        return Err(Error::TypeError("Invalid key field type".into()));
+    }
+
     Ok(AnyCommand::Create(CreateCommand::new(database, name, key, fields)))
 }
 
