@@ -6,6 +6,7 @@ pub trait DatabaseKey: Eq + Ord {}
 impl DatabaseKey for String {}
 impl DatabaseKey for i64 {}
 
+#[derive(Clone, Debug)]
 pub enum KeyType {
     String,
     Int,
@@ -19,6 +20,7 @@ pub enum FieldType {
     Float,
 }
 
+#[derive(Clone, Debug)]
 pub enum Value {
     Bool(bool),
     String(String),
@@ -26,10 +28,12 @@ pub enum Value {
     Float(f64),
 }
 
+#[derive(Clone, Debug)]
 pub struct Record {
     values: HashMap<String, Value>,
 }
 
+#[derive(Clone, Debug)]
 pub struct Table<K: DatabaseKey> {
     key: String,
     fields: HashMap<String, FieldType>,
@@ -42,6 +46,7 @@ impl<K: DatabaseKey> Table<K> {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Database<K: DatabaseKey> {
     tables: HashMap<String, Table<K>>,
 }
@@ -50,15 +55,18 @@ impl<K: DatabaseKey> Database<K> {
     pub fn new() -> Self {
         Self { tables: HashMap::new(), }
     }
-    
+
     pub fn add_table(&mut self, name: String, table: Table<K>) -> Result<(), Error> {
         if self.tables.contains_key(&name) {
             return Err(Error::AlreadyExistsError(name))
         }
-        
+
         self.tables.insert(name, table);
-        
         Ok(())
+    }
+
+    pub fn has_table(&self, name: &String) -> bool {
+        self.tables.contains_key(name)
     }
 }
 
