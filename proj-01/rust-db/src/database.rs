@@ -1,4 +1,5 @@
 ﻿use std::collections::HashMap;
+use crate::errors::Error;
 
 pub trait DatabaseKey: Eq + Ord {}
 
@@ -10,6 +11,7 @@ pub enum KeyType {
     Int,
 }
 
+#[derive(Clone, Debug)]
 pub enum FieldType {
     Bool,
     String,
@@ -29,10 +31,15 @@ pub struct Record {
 }
 
 pub struct Table<K: DatabaseKey> {
-    name: String,
     key: String,
     fields: HashMap<String, FieldType>,
     records: HashMap<K, Record>,
+}
+
+impl<K: DatabaseKey> Table<K> {
+    pub fn new(key: String, fields: HashMap<String, FieldType>, records: HashMap<K, Record>) -> Self {
+        Table { key, fields, records }
+    }
 }
 
 pub struct Database<K: DatabaseKey> {
@@ -42,6 +49,16 @@ pub struct Database<K: DatabaseKey> {
 impl<K: DatabaseKey> Database<K> {
     pub fn new() -> Self {
         Self { tables: HashMap::new(), }
+    }
+    
+    pub fn add_table(&mut self, name: String, table: Table<K>) -> Result<(), Error> {
+        if self.tables.contains_key(&name) {
+            return Err(Error::AlreadyExistsError(name))
+        }
+        
+        self.tables.insert(name, table);
+        
+        Ok(())
     }
 }
 

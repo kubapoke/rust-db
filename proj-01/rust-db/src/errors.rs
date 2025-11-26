@@ -6,4 +6,6 @@ pub enum Error {
     ParseError(String),
     #[error("Error")]
     NoMatchError,
+    #[error("{0} already exists")]
+    AlreadyExistsError(String),
 }
