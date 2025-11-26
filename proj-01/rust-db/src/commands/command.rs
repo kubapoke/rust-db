@@ -13,11 +13,11 @@ pub trait Command {
 
 pub enum AnyCommand<'a, K: DatabaseKey> {
     Create(CreateCommand<'a, K>),
-    Delete(DeleteCommand),
-    Insert(InsertCommand),
+    Delete(DeleteCommand<'a, K>),
+    Insert(InsertCommand<'a, K>),
     Read(ReadCommand),
     Save(SaveCommand),
-    Select(SelectCommand),
+    Select(SelectCommand<'a, K>),
 }
 
 impl<K: DatabaseKey> Command for AnyCommand<'_, K> {
