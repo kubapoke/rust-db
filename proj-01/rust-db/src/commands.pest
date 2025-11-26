@@ -24,16 +24,30 @@ DELETE = @{ "DELETE" ~ !ident_char }
 SAVE_AS = @{ "SAVE_AS" ~ !ident_char }
 READ_FROM = @{ "READ_FROM" ~ !ident_char }
 
+// single string tokens
+eq = @{ "=" }
+neq = @{ "!=" }
+leq = @{ "<=" }
+lt = @{ "<" }
+geq = @{ ">=" }
+gt = @{ ">" }
+int_type = @{ "Int" }
+float_type = @{ "Float" }
+bool_type = @{ "Bool" }
+string_type = @{ "String" }
+true_value = @{ "true" }
+false_value = @{ "false" }
+
 // choice sets
-comp_op = { "=" | "!=" | "<=" | "<" | ">=" | ">" }
-decl_type = { "Int" | "Float" | "Bool" | "String" }
+comp_op = { eq | neq | leq | lt | geq | gt }
+decl_type = { int_type | float_type | string_type | bool_type }
 key_type_def = { int | quoted_string }
 any_type_def = { numeric | bool | quoted_string }
 
 // type definitions
 numeric = @{ "-"? ~ (digit+ ~ ".")? ~ digit+ }
 int = @{ "-"? ~ digit+}
-bool = @{ "true" | "false" }
+bool = { true_value | false_value }
 
 string = @{ (!"\"" ~ ANY)* }
 quoted_string = _{ "\"" ~ string ~ "\"" }
