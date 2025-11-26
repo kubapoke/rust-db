@@ -29,6 +29,7 @@ pub struct Record {
 }
 
 pub struct Table<K: DatabaseKey> {
+    name: String,
     key: String,
     fields: HashMap<String, FieldType>,
     records: HashMap<K, Record>,

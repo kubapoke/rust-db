@@ -4,8 +4,11 @@ use crate::commands::insert::InsertCommand;
 use crate::commands::read::ReadCommand;
 use crate::commands::save::SaveCommand;
 use crate::commands::select::SelectCommand;
+use crate::errors::Error;
 
-pub trait Command {}
+pub trait Command {
+    fn execute(&mut self) -> Result<ExecutionSuccessValue, Error>;
+}
 
 pub enum AnyCommand {
     Create(CreateCommand),
@@ -14,4 +17,8 @@ pub enum AnyCommand {
     Read(ReadCommand),
     Save(SaveCommand),
     Select(SelectCommand),
+}
+
+pub enum ExecutionSuccessValue {
+    Success,
 }
