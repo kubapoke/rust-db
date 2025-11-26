@@ -5,6 +5,11 @@ pub trait DatabaseKey: Eq + Ord {}
 impl DatabaseKey for String {}
 impl DatabaseKey for i64 {}
 
+pub enum KeyType {
+    String,
+    Int,
+}
+
 pub enum FieldType {
     Bool,
     String,
@@ -33,7 +38,26 @@ pub struct Database<K: DatabaseKey> {
     tables: HashMap<String, Table<K>>,
 }
 
+impl<K: DatabaseKey> Database<K> {
+    pub fn new() -> Self {
+        Self { tables: HashMap::new(), }
+    }
+}
+
 pub enum AnyDatabase {
     StringDatabase(Database<String>),
     IntDatabase(Database<i64>),
+}
+
+pub fn get_database(key: KeyType) -> AnyDatabase {
+    match key {
+        KeyType::String => {
+            let db = Database::<String>::new();
+            AnyDatabase::StringDatabase(db)
+        }
+        KeyType::Int => {
+            let db = Database::<i64>::new();
+            AnyDatabase::IntDatabase(db)
+        }
+    }
 }

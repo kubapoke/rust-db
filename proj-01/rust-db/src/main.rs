@@ -1,6 +1,10 @@
+use rust_db::database::get_database;
+use rust_db::database::KeyType::{Int, String};
 use rust_db::parser::parse_command_list;
 
 fn main() {
+    let mut db = get_database(String);
+    
     parse_command_list("CREATE library KEY id
 FIELDS id: String, title: String, year: Int, pages: Int, rating: Float, topic: String, is_foundational: Bool
 CREATE concepts KEY name
@@ -23,5 +27,5 @@ SELECT id, title FROM library WHERE pages > 250
 
 SAVE_AS hott_script_saved.txt
 READ_FROM hott_more.txt
-");
+", &mut db);
 }
