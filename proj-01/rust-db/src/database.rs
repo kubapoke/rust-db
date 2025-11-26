@@ -1,5 +1,7 @@
 ﻿use std::collections::HashMap;
+use crate::commands::command::{Command, ExecutionSuccessValue};
 use crate::errors::Error;
+use crate::parser::parse_command;
 
 pub trait DatabaseKey: Eq + Ord {}
 
@@ -89,5 +91,10 @@ impl AnyDatabase {
             AnyDatabase::StringDatabase(_) => FieldType::String,
             AnyDatabase::IntDatabase(_) => FieldType::Int,
         }
+    }
+
+    pub fn execute_command(&mut self, command: &str) -> Result<ExecutionSuccessValue, Error> {
+        let mut  executable = parse_command(command, self)?;
+        executable.execute()
     }
 }
