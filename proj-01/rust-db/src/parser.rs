@@ -75,29 +75,15 @@ pub fn parse_create_query<'a>(create_query_pair: Pair<Rule>, database: &'a mut A
     let key = parse_ident(key_pair)?;
     let fields = parse_decl_list(fields_pair)?;
 
-    let key_field_type = fields.get(&key)
-        .ok_or_else(|| Error::NotSpecifiedError("Field type of key was not specified".into()))?;
-
-    if *key_field_type != database.key_type() {
-        return Err(Error::TypeError("Invalid key field type".into()));
-    }
-
     Ok(AnyCommand::Create(CreateCommand::new(database, name, key, fields)))
 }
 
-pub fn parse_decl_list(decl_list_pair: Pair<Rule>) -> Result<HashMap<String, FieldType>, Error> {
-    let mut fields = HashMap::new();
+pub fn parse_decl_list(decl_list_pair: Pair<Rule>) -> Result<Vec<(String, FieldType)>, Error> {
+    let mut fields = Vec::new();
 
     for decl_pair in decl_list_pair.into_inner() {
         let (key, field_type) = parse_decl(decl_pair)?;
-
-        if fields.contains_key(&key) {
-            return Err(Error::AlreadyExistsError(
-                format!("Field '{}' is declared more than once", key)
-            ));
-        }
-
-        fields.insert(key, field_type);
+        fields.push((key, field_type));
     }
 
     Ok(fields)
