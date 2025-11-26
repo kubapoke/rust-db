@@ -42,6 +42,13 @@ pub enum FieldType {
 }
 
 #[derive(Clone, Debug)]
+pub enum IntermediateValue {
+    Bool(bool),
+    String(String),
+    Numeric(f64),
+}
+
+#[derive(Clone, Debug)]
 pub enum Value {
     Bool(bool),
     String(String),
@@ -88,6 +95,11 @@ impl<K: DatabaseKey> Database<K> {
 
     pub fn has_table(&self, name: &String) -> bool {
         self.tables.contains_key(name)
+    }
+    
+    pub fn get_table(&self, name: &String) -> Result<&Table<K>, Error> {
+        self.tables.get(name)
+            .ok_or_else(|| Error::NotExistError(format!("Table '{}' name does not exist", name).to_string()))
     }
     
     pub fn execute_command(&mut self, command: &str) -> Result<ExecutionSuccessValue, Error> {
