@@ -70,6 +70,7 @@ impl<K: DatabaseKey> Database<K> {
     }
 }
 
+#[derive(Clone, Debug)]
 pub enum AnyDatabase {
     StringDatabase(Database<String>),
     IntDatabase(Database<i64>),

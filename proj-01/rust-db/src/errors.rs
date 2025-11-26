@@ -2,10 +2,14 @@
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Error while parsing {0}")]
+    #[error("ParseError: {0}")]
     ParseError(String),
-    #[error("Error")]
-    NoMatchError,
-    #[error("{0} already exists")]
+    #[error("NoMatchError: {0}")]
+    NoTokenError(String),
+    #[error("AlreadyExistsError: {0}")]
     AlreadyExistsError(String),
+    #[error("UnknownTokenError: {0}")]
+    UnknownTokenError(String),
+    #[error("MissingTokenError: {0}")]
+    MissingTokenError(String),
 }
