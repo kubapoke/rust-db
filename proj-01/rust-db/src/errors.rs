@@ -8,6 +8,8 @@ pub enum Error {
     NoTokenError(String),
     #[error("AlreadyExistsError: {0}")]
     AlreadyExistsError(String),
+    #[error("NotExistError: {0}")]
+    NotExistError(String),
     #[error("UnknownTokenError: {0}")]
     UnknownTokenError(String),
     #[error("MissingTokenError: {0}")]

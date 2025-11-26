@@ -3,12 +3,31 @@ use crate::commands::command::{Command, ExecutionSuccessValue};
 use crate::errors::Error;
 use crate::parser::parse_command;
 
-pub trait DatabaseKey: Eq + Ord {}
+pub trait DatabaseKey: Eq + Ord {
+    fn get_key_type() -> KeyType;
+    fn get_field_type() -> FieldType;
+}
 
-impl DatabaseKey for String {}
-impl DatabaseKey for i64 {}
+impl DatabaseKey for String {
+    fn get_key_type() -> KeyType {
+        KeyType::String
+    }
 
-#[derive(Clone, Debug)]
+    fn get_field_type() -> FieldType {
+        FieldType::String
+    }
+}
+impl DatabaseKey for i64 {
+    fn get_key_type() -> KeyType {
+        KeyType::String
+    }
+
+    fn get_field_type() -> FieldType {
+        FieldType::String
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum KeyType {
     String,
     Int,
@@ -70,6 +89,11 @@ impl<K: DatabaseKey> Database<K> {
     pub fn has_table(&self, name: &String) -> bool {
         self.tables.contains_key(name)
     }
+    
+    pub fn execute_command(&mut self, command: &str) -> Result<ExecutionSuccessValue, Error> {
+        let mut executable = parse_command(command, self)?;
+        executable.execute()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -94,7 +118,9 @@ impl AnyDatabase {
     }
 
     pub fn execute_command(&mut self, command: &str) -> Result<ExecutionSuccessValue, Error> {
-        let mut  executable = parse_command(command, self)?;
-        executable.execute()
+        match self {
+            AnyDatabase::StringDatabase(db) => db.execute_command(command),
+            AnyDatabase::IntDatabase(db) => db.execute_command(command),
+        }
     }
 }

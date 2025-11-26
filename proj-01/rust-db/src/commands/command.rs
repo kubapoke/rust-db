@@ -4,14 +4,15 @@ use crate::commands::insert::InsertCommand;
 use crate::commands::read::ReadCommand;
 use crate::commands::save::SaveCommand;
 use crate::commands::select::SelectCommand;
+use crate::database::DatabaseKey;
 use crate::errors::Error;
 
 pub trait Command {
     fn execute(&mut self) -> Result<ExecutionSuccessValue, Error>;
 }
 
-pub enum AnyCommand<'a> {
-    Create(CreateCommand<'a>),
+pub enum AnyCommand<'a, K: DatabaseKey> {
+    Create(CreateCommand<'a, K>),
     Delete(DeleteCommand),
     Insert(InsertCommand),
     Read(ReadCommand),
@@ -19,7 +20,7 @@ pub enum AnyCommand<'a> {
     Select(SelectCommand),
 }
 
-impl Command for AnyCommand<'_> {
+impl<K: DatabaseKey> Command for AnyCommand<'_, K> {
     fn execute(&mut self) -> Result<ExecutionSuccessValue, Error> {
         match self { 
             AnyCommand::Create(c) => c.execute(),

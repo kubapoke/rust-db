@@ -4,7 +4,7 @@ use pest::Parser;
 use crate::errors::Error;
 use crate::commands::command::AnyCommand;
 use crate::commands::create::CreateCommand;
-use crate::database::{AnyDatabase, FieldType, Value};
+use crate::database::{AnyDatabase, Database, DatabaseKey, FieldType, Value};
 
 #[derive(pest_derive::Parser)]
 #[grammar = "commands.pest"]
@@ -23,7 +23,7 @@ fn expect_rule<'a>(pair: Option<Pair<'a, Rule>>, expected: Rule, msg: &'static s
     Ok(pair)
 }
 
-pub fn parse_command<'a>(input: &str, database: &'a mut AnyDatabase) -> Result<AnyCommand<'a>, Error> {
+pub fn parse_command<'a, K: DatabaseKey>(input: &str, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
     let mut pairs = match QueryParser::parse(Rule::command, input.trim()) {
         Ok(pairs) => pairs,
         Err(e) => {
@@ -64,7 +64,7 @@ pub fn parse_decl_type(decl_type_pair: Pair<Rule>) -> Result<FieldType, Error> {
     }
 }
 
-pub fn parse_create_query<'a>(create_query_pair: Pair<Rule>, database: &'a mut AnyDatabase) -> Result<AnyCommand<'a>, Error> {
+pub fn parse_create_query<'a, K: DatabaseKey>(create_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
     let items: Vec<_> = create_query_pair.into_inner().collect();
 
     let name_pair = expect_rule(items.get(1).cloned(), Rule::ident, "Missing or invalid name ident")?;
@@ -101,22 +101,22 @@ pub fn parse_decl(decl_pair: Pair<Rule>) -> Result<(String, FieldType), Error> {
     Ok((key, field_type))
 }
 
-pub fn parse_select_query<'a>(select_query_pair: Pair<Rule>, database: &'a mut AnyDatabase) -> Result<AnyCommand<'a>, Error> {
+pub fn parse_select_query<'a, K: DatabaseKey>(select_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
     todo!()
 }
 
-pub fn parse_insert_query<'a>(insert_query_pair: Pair<Rule>, database: &'a mut AnyDatabase) -> Result<AnyCommand<'a>, Error> {
+pub fn parse_insert_query<'a, K: DatabaseKey>(insert_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
     todo!()
 }
 
-pub fn parse_delete_query<'a>(delete_query_pair: Pair<Rule>, database: &'a mut AnyDatabase) -> Result<AnyCommand<'a>, Error> {
+pub fn parse_delete_query<'a, K: DatabaseKey>(delete_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
     todo!()
 }
 
-pub fn parse_read_query<'a>(read_query_pair: Pair<Rule>, database: &'a mut AnyDatabase) -> Result<AnyCommand<'a>, Error> {
+pub fn parse_read_query<'a, K: DatabaseKey>(read_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
     todo!()
 }
 
-pub fn parse_save_query<'a>(save_query_pair: Pair<Rule>, database: &'a mut AnyDatabase) -> Result<AnyCommand<'a>, Error> {
+pub fn parse_save_query<'a, K: DatabaseKey>(save_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
     todo!()
 }
