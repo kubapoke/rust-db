@@ -137,17 +137,7 @@ pub fn parse_decl(decl_pair: Pair<Rule>) -> Result<(String, FieldType), Error> {
 }
 
 pub fn parse_select_query<'a, K: DatabaseKey>(select_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
-    let items: Vec<_> = select_query_pair.into_inner().collect();
-
-    let assign_list_pair = expect_rule(items.get(1).cloned(), Rule::assign_list, "Missing or invalid assignment list")?;
-    let table_ident_pair = expect_rule(items.get(3).cloned(), Rule::ident, "Missing or invalid table identifier")?;
-
-    let assign_list = parse_assign_list(assign_list_pair)?;
-    let table_id = parse_ident(table_ident_pair)?;
-
-    let table = database.get_table(&table_id)?;
-
-    Ok(AnyCommand::Insert(InsertCommand::new(table, assign_list)))
+    todo!()
 }
 
 pub fn parse_assign_list(assign_list_pair: Pair<Rule>) -> Result<Vec<(String, IntermediateValue)>, Error> {
@@ -174,7 +164,17 @@ pub fn parse_assign(assign_pair: Pair<Rule>) -> Result<(String, IntermediateValu
 }
 
 pub fn parse_insert_query<'a, K: DatabaseKey>(insert_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
-    todo!()
+    let items: Vec<_> = insert_query_pair.into_inner().collect();
+
+    let assign_list_pair = expect_rule(items.get(1).cloned(), Rule::assign_list, "Missing or invalid assignment list")?;
+    let table_ident_pair = expect_rule(items.get(3).cloned(), Rule::ident, "Missing or invalid table identifier")?;
+
+    let assign_list = parse_assign_list(assign_list_pair)?;
+    let table_id = parse_ident(table_ident_pair)?;
+
+    let mut table = database.get_table(&table_id)?;
+
+    Ok(AnyCommand::Insert(InsertCommand::new(table, assign_list)))
 }
 
 pub fn parse_delete_query<'a, K: DatabaseKey>(delete_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {

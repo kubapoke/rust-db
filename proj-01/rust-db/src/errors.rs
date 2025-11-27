@@ -18,4 +18,6 @@ pub enum Error {
     NotSpecifiedError(String),
     #[error("TypeError: {0}")]
     TypeError(String),
+    #[error("MissingFieldError: {0}")]
+    MissingFieldError(String),
 }
