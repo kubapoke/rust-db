@@ -24,14 +24,14 @@ impl DatabaseKey for String {
     fn from_value(v: &Value) -> Result<Self, Error> {
         match v {
             Value::String(s) => Ok(s.clone()),
-            _ => Err(Error::TypeError("Expected string key".into()))
+            _ => Err(Error::TypeError("Expected string key".to_string()))
         }
     }
 
     fn from_key_value(v: &KeyValue) -> Result<Self, Error> {
         match v {
             KeyValue::String(s) => Ok(s.clone()),
-            _ => Err(Error::TypeError("Expected string key".into()))
+            _ => Err(Error::TypeError("Expected string key".to_string()))
         }
     }
 }
@@ -47,14 +47,14 @@ impl DatabaseKey for i64 {
     fn from_value(v: &Value) -> Result<Self, Error> {
         match v {
             Value::Int(i) => Ok(*i),
-            _ => Err(Error::TypeError("Expected integer key".into()))
+            _ => Err(Error::TypeError("Expected integer key".to_string()))
         }
     }
 
     fn from_key_value(v: &KeyValue) -> Result<Self, Error> {
         match v {
             KeyValue::Int(i) => Ok(*i),
-            _ => Err(Error::TypeError("Expected integer key".into()))
+            _ => Err(Error::TypeError("Expected integer key".to_string()))
         }
     }
 }
@@ -151,7 +151,7 @@ impl<K: DatabaseKey> Table<K> {
 
     pub fn key_type(&self) -> Result<FieldType, Error> {
         self.fields.get(&self.key)
-            .ok_or_else(|| Error::NotSpecifiedError("Field type of key was not specified".into()))
+            .ok_or_else(|| Error::NotSpecifiedError("Field type of key was not specified".to_string()))
             .cloned()
     }
 
@@ -161,7 +161,7 @@ impl<K: DatabaseKey> Table<K> {
         }
 
         if self.records.contains_key(typed_key) {
-            return Err(Error::AlreadyExistsError("Key already exists".into()));
+            return Err(Error::AlreadyExistsError("Key already exists".to_string()));
         }
 
         Ok(())

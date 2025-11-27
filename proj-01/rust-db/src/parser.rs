@@ -12,14 +12,14 @@ use crate::database::{Database, DatabaseKey, FieldType, IntermediateValue, KeyVa
 struct QueryParser;
 
 fn expect_any_rule<'a>(pair: Option<Pair<'a, Rule>>, msg: &'static str) -> Result<Pair<'a, Rule>, Error> {
-    let pair = pair.ok_or_else(|| Error::NoTokenError(msg.into()))?;
+    let pair = pair.ok_or_else(|| Error::NoTokenError(msg.to_string()))?;
     Ok(pair)
 }
 
 fn expect_rule<'a>(pair: Option<Pair<'a, Rule>>, expected: Rule, msg: &'static str) -> Result<Pair<'a, Rule>, Error> {
-    let pair = pair.ok_or_else(|| Error::NoTokenError(msg.into()))?;
+    let pair = pair.ok_or_else(|| Error::NoTokenError(msg.to_string()))?;
     if pair.as_rule() != expected {
-        return Err(Error::UnknownTokenError(msg.into()));
+        return Err(Error::UnknownTokenError(msg.to_string()));
     }
     Ok(pair)
 }
