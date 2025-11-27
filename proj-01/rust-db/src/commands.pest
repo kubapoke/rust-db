@@ -82,7 +82,7 @@ create_query = { CREATE ~ ident ~ KEY ~ ident ~ (NEWLINE* ~ FIELDS) ~ decl_list 
 insert_query = { INSERT ~ assign_list ~ INTO ~ ident }
 delete_query = { DELETE ~ key_type_def ~ FROM ~ ident }
 save_query = { SAVE_AS ~ path }
-read_query = { READ_FROM~ path }
+read_query = { READ_FROM ~ path }
 
 // main command
 command = { select_query | create_query | insert_query | delete_query | save_query | read_query }

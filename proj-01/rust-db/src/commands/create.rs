@@ -38,6 +38,6 @@ impl<K: DatabaseKey> Command for CreateCommand<'_, K> {
 
         self.database.add_table(self.name.clone(), table)?;
 
-        Ok(ExecutionSuccessValue::Success)
+        Ok(ExecutionSuccessValue::Success(format!("Table '{}' created successfully", self.name)))
     }
 }

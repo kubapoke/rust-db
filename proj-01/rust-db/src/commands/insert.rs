@@ -36,6 +36,6 @@ impl<K: DatabaseKey> Command for InsertCommand<'_, K> {
         
         self.table.add_record(record)?;
         
-        Ok(ExecutionSuccessValue::Success)
+        Ok(ExecutionSuccessValue::Success("Successfully inserted record".to_string()))
     }
 }

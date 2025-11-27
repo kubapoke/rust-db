@@ -34,5 +34,5 @@ impl<K: DatabaseKey> Command for AnyCommand<'_, K> {
 }
 
 pub enum ExecutionSuccessValue {
-    Success,
+    Success(String),
 }

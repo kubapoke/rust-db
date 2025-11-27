@@ -18,6 +18,6 @@ impl<K: DatabaseKey> Command for DeleteCommand<'_, K> {
         let typed_key = K::from_key_value(&self.key)?;
         self.table.delete_record(&typed_key)?;
         
-        Ok(ExecutionSuccessValue::Success)
+        Ok(ExecutionSuccessValue::Success(format!("Successfully deleted record {} from table", typed_key)))
     }
 }
