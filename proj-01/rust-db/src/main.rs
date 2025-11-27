@@ -1,6 +1,5 @@
-use rust_db::commands::command::ExecutionSuccessValue;
-use rust_db::database::{AnyDatabase, FieldType, KeyType};
-use rust_db::errors::Error;
+use rust_db::database::database::AnyDatabase;
+use rust_db::database::types::KeyType;
 
 fn main() {
     let mut db = AnyDatabase::new(KeyType::String);

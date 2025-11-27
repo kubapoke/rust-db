@@ -1,5 +1,7 @@
 ﻿use crate::commands::command::{Command, ExecutionSuccessValue};
-use crate::database::{DatabaseKey, KeyValue, Table};
+use crate::database::key::DatabaseKey;
+use crate::database::table::Table;
+use crate::database::value::KeyValue;
 use crate::errors;
 
 pub struct DeleteCommand<'a, K: DatabaseKey> {

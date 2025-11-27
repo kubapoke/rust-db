@@ -1,6 +1,9 @@
 ﻿use std::collections::HashMap;
 use crate::commands::command::{Command, ExecutionSuccessValue};
-use crate::database::{Database, DatabaseKey, FieldType, Table};
+use crate::database::database::Database;
+use crate::database::key::DatabaseKey;
+use crate::database::table::Table;
+use crate::database::types::FieldType;
 use crate::errors::{self, Error};
 
 pub struct CreateCommand<'a, K: DatabaseKey> {

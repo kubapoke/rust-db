@@ -4,7 +4,7 @@ use crate::commands::insert::InsertCommand;
 use crate::commands::read::ReadCommand;
 use crate::commands::save::SaveCommand;
 use crate::commands::select::SelectCommand;
-use crate::database::DatabaseKey;
+use crate::database::key::DatabaseKey;
 use crate::errors::Error;
 
 pub trait Command {

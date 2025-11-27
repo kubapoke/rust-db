@@ -1,5 +1,6 @@
 ﻿use crate::commands::command::{Command, ExecutionSuccessValue};
-use crate::database::{DatabaseKey, Table};
+use crate::database::key::DatabaseKey;
+use crate::database::table::Table;
 use crate::errors;
 
 pub struct SelectCommand<'a, K: DatabaseKey> {

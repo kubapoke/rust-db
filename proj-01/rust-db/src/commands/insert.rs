@@ -1,6 +1,9 @@
 ﻿use std::collections::HashMap;
 use crate::commands::command::{Command, ExecutionSuccessValue};
-use crate::database::{DatabaseKey, IntermediateRecord, IntermediateValue, Table};
+use crate::database::key::DatabaseKey;
+use crate::database::record::IntermediateRecord;
+use crate::database::table::Table;
+use crate::database::value::IntermediateValue;
 use crate::errors;
 use crate::errors::Error;
 
