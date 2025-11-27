@@ -1,5 +1,4 @@
-﻿use std::collections::HashMap;
-use pest::iterators::Pair;
+﻿use pest::iterators::Pair;
 use pest::Parser;
 use crate::errors::Error;
 use crate::commands::command::AnyCommand;
