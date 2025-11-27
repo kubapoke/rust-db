@@ -167,7 +167,7 @@ impl<K: DatabaseKey> Table<K> {
         Ok(())
     }
 
-    pub fn convert_record(&self, intermediate: IntermediateRecord) -> Result<Record, Error> {
+    fn convert_record(&self, intermediate: IntermediateRecord) -> Result<Record, Error> {
         let mut values = HashMap::new();
 
         for (field_name, field_type) in &self.fields {

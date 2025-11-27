@@ -5,7 +5,7 @@ use crate::commands::command::AnyCommand;
 use crate::commands::create::CreateCommand;
 use crate::commands::delete::DeleteCommand;
 use crate::commands::insert::InsertCommand;
-use crate::database::{Database, DatabaseKey, FieldType, IntermediateValue, KeyValue, Value};
+use crate::database::{Database, DatabaseKey, FieldType, IntermediateValue, KeyValue};
 
 #[derive(pest_derive::Parser)]
 #[grammar = "commands.pest"]
