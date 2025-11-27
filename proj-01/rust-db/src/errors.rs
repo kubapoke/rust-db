@@ -20,4 +20,6 @@ pub enum Error {
     TypeError(String),
     #[error("MissingFieldError: {0}")]
     MissingFieldError(String),
+    #[error("InvalidComparisonError: {0}")]
+    InvalidComparisonError(String),
 }

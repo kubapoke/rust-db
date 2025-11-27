@@ -1,5 +1,7 @@
-﻿use crate::database::types::FieldType;
+﻿use std::cmp::Ordering;
+use crate::database::types::FieldType;
 use crate::errors::Error;
+use crate::errors::Error::InvalidComparisonError;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum KeyValue {
@@ -45,12 +47,34 @@ pub enum Value {
 }
 
 impl Value {
-    pub(crate) fn get_field_type(&self) -> FieldType {
+    pub fn get_field_type(&self) -> FieldType {
         match self {
             Value::Bool(_) => FieldType::Bool,
             Value::String(_) => FieldType::String,
             Value::Int(_) => FieldType::Int,
             Value::Float(_) => FieldType::Float,
         }
+    }
+
+    fn value_order(&self) -> u8 {
+        match self {
+            Value::Bool(_) => 0,
+            Value::String(_) => 1,
+            Value::Int(_) => 2,
+            Value::Float(_) => 3,
+        }
+    }
+}
+
+pub fn compare_values(a: &Option<&Value>, b: &Option<&Value>) -> Ordering {
+    match (a, b) {
+        (None, None) => Ordering::Equal,
+        (None, Some(_)) => Ordering::Less,
+        (Some(_), None) => Ordering::Greater,
+        (Some(Value::Bool(x)), Some(Value::Bool(y))) => x.cmp(y),
+        (Some(Value::String(x)), Some(Value::String(y))) => x.cmp(y),
+        (Some(Value::Int(x)), Some(Value::Int(y))) => x.cmp(y),
+        (Some(Value::Float(x)), Some(Value::Float(y))) => x.partial_cmp(y).unwrap_or_else(|| Ordering::Equal),
+        (Some(va), Some(vb)) => va.value_order().cmp(&vb.value_order()),
     }
 }

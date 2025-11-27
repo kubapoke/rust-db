@@ -1,6 +1,7 @@
 ﻿use std::collections::HashMap;
 use crate::database::key::DatabaseKey;
 use crate::database::record::{IntermediateRecord, Record};
+use crate::database::slice::TableSlice;
 use crate::database::types::FieldType;
 use crate::database::value::Value;
 use crate::errors::Error;
@@ -75,5 +76,11 @@ impl<K: DatabaseKey> Table<K> {
             .ok_or_else(|| Error::NotExistError(format!("Table missing a record with key '{}'", record_key)))?;
 
         Ok(())
+    }
+    
+    pub fn to_slice(&self) -> TableSlice {
+        let records = self.records.values().cloned().collect::<Vec<_>>();
+        
+        TableSlice::new(records)
     }
 }
