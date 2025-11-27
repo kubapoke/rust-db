@@ -80,7 +80,7 @@ fn main() {
     println!();
 
     match db.execute_command(
-        "DELETE \"lib2\" FROM concepts"
+        "DELETE \"lib2\" FROM library"
     ) {
         Ok(_) => println!("{:?}", db),
         Err(e) => { println!("{}", e); return; }
