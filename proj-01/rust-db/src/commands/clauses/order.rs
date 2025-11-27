@@ -1,6 +1,6 @@
 use crate::commands::clauses::clause::Clause;
 use crate::database::slice::TableSlice;
-use crate::database::value::compare_values;
+use crate::database::value::sort_compare_values;
 use crate::errors::Error;
 
 pub struct OrderByClause {
@@ -20,7 +20,7 @@ impl Clause for OrderByClause {
                 let a = a.values.get(field);
                 let b = b.values.get(field);
 
-                let cmp = compare_values(&a, &b);
+                let cmp = sort_compare_values(&a, &b);
                 if cmp != std::cmp::Ordering::Equal {
                     return cmp;
                 }

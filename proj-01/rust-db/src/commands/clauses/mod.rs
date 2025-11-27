@@ -2,3 +2,4 @@
 pub mod r#where;
 pub mod order;
 pub mod limit;
+pub mod evaluable;

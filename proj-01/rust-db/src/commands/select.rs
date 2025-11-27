@@ -6,7 +6,7 @@ use crate::errors;
 
 pub struct SelectCommand<'a, K: DatabaseKey> {
     table: &'a Table<K>,
-    clauses: Vec<AnyClause>,
+    clauses: Vec<AnyClause<'a>>,
 }
 
 impl<K: DatabaseKey> Command for SelectCommand<'_, K> {

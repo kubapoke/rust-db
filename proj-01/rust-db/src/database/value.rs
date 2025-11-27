@@ -1,7 +1,6 @@
 ﻿use std::cmp::Ordering;
 use crate::database::types::FieldType;
 use crate::errors::Error;
-use crate::errors::Error::InvalidComparisonError;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum KeyValue {
@@ -66,7 +65,7 @@ impl Value {
     }
 }
 
-pub fn compare_values(a: &Option<&Value>, b: &Option<&Value>) -> Ordering {
+pub fn sort_compare_values(a: &Option<&Value>, b: &Option<&Value>) -> Ordering {
     match (a, b) {
         (None, None) => Ordering::Equal,
         (None, Some(_)) => Ordering::Less,
@@ -76,5 +75,15 @@ pub fn compare_values(a: &Option<&Value>, b: &Option<&Value>) -> Ordering {
         (Some(Value::Int(x)), Some(Value::Int(y))) => x.cmp(y),
         (Some(Value::Float(x)), Some(Value::Float(y))) => x.partial_cmp(y).unwrap_or_else(|| Ordering::Equal),
         (Some(va), Some(vb)) => va.value_order().cmp(&vb.value_order()),
+    }
+}
+
+pub fn compare_value_intermediate_value(value: &Value, constant: &IntermediateValue) -> Result<Ordering, Error> {
+    match (value, constant) {
+        (Value::Int(a), IntermediateValue::Numeric(b)) => Ok((*a as f64).partial_cmp(b).ok_or_else(|| Error::TypeError("".to_string()))?),
+        (Value::Float(a), IntermediateValue::Numeric(b)) => Ok(a.partial_cmp(b).ok_or_else(|| Error::TypeError("numeric value".to_string()))?),
+        (Value::Bool(a), IntermediateValue::Bool(b)) => Ok(a.cmp(b)),
+        (Value::String(a), IntermediateValue::String(b)) => Ok(a.cmp(b)),
+        (a, b) => Err(Error::TypeError(format!("Cannot compare field value {:?} with constant {:?}", a, b))),
     }
 }
