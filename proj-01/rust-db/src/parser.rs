@@ -4,8 +4,9 @@ use pest::Parser;
 use crate::errors::Error;
 use crate::commands::command::AnyCommand;
 use crate::commands::create::CreateCommand;
+use crate::commands::delete::DeleteCommand;
 use crate::commands::insert::InsertCommand;
-use crate::database::{Database, DatabaseKey, FieldType, IntermediateValue, Value};
+use crate::database::{Database, DatabaseKey, FieldType, IntermediateValue, KeyValue, Value};
 
 #[derive(pest_derive::Parser)]
 #[grammar = "commands.pest"]
@@ -66,6 +67,19 @@ pub fn parse_string(string_pair: Pair<Rule>) -> Result<IntermediateValue, Error>
     Ok(IntermediateValue::String(string))
 }
 
+pub fn parse_key_int(int_pair: Pair<Rule>) -> Result<KeyValue, Error> {
+    let pair = expect_rule(Some(int_pair), Rule::int, "Expected an integer")?;
+    let integer = pair.as_str().parse::<i64>()
+        .map_err(|e| Error::ParseError(format!("Failed to parse int: {}", e)))?;
+    Ok(KeyValue::Int(integer))
+}
+
+pub fn parse_key_string(string_pair: Pair<Rule>) -> Result<KeyValue, Error> {
+    let pair = expect_rule(Some(string_pair), Rule::string, "Expected a string")?;
+    let string = pair.as_str().to_string();
+    Ok(KeyValue::String(string))
+}
+
 pub fn parse_bool(bool_pair: Pair<Rule>) -> Result<IntermediateValue, Error> {
     let pair = expect_rule(Some(bool_pair), Rule::bool, "Expected a boolean")?;
     let boolean = expect_any_rule(pair.into_inner().next(), "Expected a boolean value")?;
@@ -95,6 +109,16 @@ pub fn parse_any_type_def(decl_type_pair: Pair<Rule>) -> Result<IntermediateValu
         Rule::numeric => parse_numeric(type_pair),
         Rule::string => parse_string(type_pair),
         Rule::bool => parse_bool(type_pair),
+        _ => Err(Error::UnknownTokenError(String::from("Unknown or invalid type")))
+    }
+}
+
+pub fn parse_key_type_def(key_type_pair: Pair<Rule>) -> Result<KeyValue, Error> {
+    let type_pair = expect_any_rule(key_type_pair.into_inner().next(), "Expected type declaration")?;
+
+    match type_pair.as_rule() {
+        Rule::string => parse_key_string(type_pair),
+        Rule::int => parse_key_int(type_pair),
         _ => Err(Error::UnknownTokenError(String::from("Unknown or invalid type")))
     }
 }
@@ -140,6 +164,20 @@ pub fn parse_select_query<'a, K: DatabaseKey>(select_query_pair: Pair<Rule>, dat
     todo!()
 }
 
+pub fn parse_insert_query<'a, K: DatabaseKey>(insert_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
+    let items: Vec<_> = insert_query_pair.into_inner().collect();
+
+    let assign_list_pair = expect_rule(items.get(1).cloned(), Rule::assign_list, "Missing or invalid assignment list")?;
+    let table_ident_pair = expect_rule(items.get(3).cloned(), Rule::ident, "Missing or invalid table identifier")?;
+
+    let assign_list = parse_assign_list(assign_list_pair)?;
+    let table_id = parse_ident(table_ident_pair)?;
+
+    let table = database.get_table(&table_id)?;
+
+    Ok(AnyCommand::Insert(InsertCommand::new(table, assign_list)))
+}
+
 pub fn parse_assign_list(assign_list_pair: Pair<Rule>) -> Result<Vec<(String, IntermediateValue)>, Error> {
     let mut assignments = Vec::new();
 
@@ -163,22 +201,18 @@ pub fn parse_assign(assign_pair: Pair<Rule>) -> Result<(String, IntermediateValu
     Ok((key, value))
 }
 
-pub fn parse_insert_query<'a, K: DatabaseKey>(insert_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
-    let items: Vec<_> = insert_query_pair.into_inner().collect();
+pub fn parse_delete_query<'a, K: DatabaseKey>(delete_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
+    let items: Vec<_> = delete_query_pair.into_inner().collect();
 
-    let assign_list_pair = expect_rule(items.get(1).cloned(), Rule::assign_list, "Missing or invalid assignment list")?;
+    let key_type_pair = expect_rule(items.get(1).cloned(), Rule::key_type_def, "Missing or invalid key type")?;
     let table_ident_pair = expect_rule(items.get(3).cloned(), Rule::ident, "Missing or invalid table identifier")?;
 
-    let assign_list = parse_assign_list(assign_list_pair)?;
+    let key = parse_key_type_def(key_type_pair)?;
     let table_id = parse_ident(table_ident_pair)?;
 
-    let mut table = database.get_table(&table_id)?;
+    let table = database.get_table(&table_id)?;
 
-    Ok(AnyCommand::Insert(InsertCommand::new(table, assign_list)))
-}
-
-pub fn parse_delete_query<'a, K: DatabaseKey>(delete_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
-    todo!()
+    Ok(AnyCommand::Delete(DeleteCommand::new(table, key)))
 }
 
 pub fn parse_read_query<'a, K: DatabaseKey>(read_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {

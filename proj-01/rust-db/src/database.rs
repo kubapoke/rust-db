@@ -1,14 +1,15 @@
 ﻿use std::collections::HashMap;
+use std::fmt::Display;
 use std::hash::Hash;
-use std::ops::Deref;
 use crate::commands::command::{Command, ExecutionSuccessValue};
 use crate::errors::Error;
 use crate::parser::parse_command;
 
-pub trait DatabaseKey: Eq + Ord + Sized + Hash {
+pub trait DatabaseKey: Eq + Ord + Sized + Hash + Display {
     fn get_key_type() -> KeyType;
     fn get_field_type() -> FieldType;
     fn from_value(v: &Value) -> Result<Self, Error>;
+    fn from_key_value(v: &KeyValue) -> Result<Self, Error>;
 }
 
 impl DatabaseKey for String {
@@ -23,6 +24,13 @@ impl DatabaseKey for String {
     fn from_value(v: &Value) -> Result<Self, Error> {
         match v {
             Value::String(s) => Ok(s.clone()),
+            _ => Err(Error::TypeError("Expected string key".into()))
+        }
+    }
+
+    fn from_key_value(v: &KeyValue) -> Result<Self, Error> {
+        match v {
+            KeyValue::String(s) => Ok(s.clone()),
             _ => Err(Error::TypeError("Expected string key".into()))
         }
     }
@@ -42,12 +50,25 @@ impl DatabaseKey for i64 {
             _ => Err(Error::TypeError("Expected integer key".into()))
         }
     }
+
+    fn from_key_value(v: &KeyValue) -> Result<Self, Error> {
+        match v {
+            KeyValue::Int(i) => Ok(*i),
+            _ => Err(Error::TypeError("Expected integer key".into()))
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum KeyType {
     String,
     Int,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum KeyValue {
+    String(String),
+    Int(i64),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -127,7 +148,7 @@ impl<K: DatabaseKey> Table<K> {
     pub fn new(key: String, fields: HashMap<String, FieldType>, records: HashMap<K, Record>) -> Self {
         Table { key, fields, records }
     }
-    
+
     pub fn key_type(&self) -> Result<FieldType, Error> {
         self.fields.get(&self.key)
             .ok_or_else(|| Error::NotSpecifiedError("Field type of key was not specified".into()))
@@ -180,6 +201,13 @@ impl<K: DatabaseKey> Table<K> {
 
         Ok(())
     }
+
+    pub fn delete_record(&mut self, record_key: &K) -> Result<(), Error> {
+        _ = self.records.remove(record_key)
+            .ok_or_else(|| Error::NotExistError(format!("Table missing a record with key '{}'", record_key)))?;
+
+        Ok(())
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -196,7 +224,7 @@ impl<K: DatabaseKey> Database<K> {
         if self.tables.contains_key(&name) {
             return Err(Error::AlreadyExistsError(format!("Table '{}' already exists", name)));
         }
-        
+
         if table.key_type()? != K::get_field_type() {
             return Err(Error::TypeError("Mismatched key type".to_string()));
         }
