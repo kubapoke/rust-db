@@ -3,7 +3,8 @@ use crate::database::{DatabaseKey, Table};
 use crate::errors;
 
 pub struct DeleteCommand<'a, K: DatabaseKey> {
-    table: &'a Table<K>
+    table: &'a mut Table<K>,
+    key: String
 }
 
 impl<K: DatabaseKey> Command for DeleteCommand<'_, K> {

@@ -127,6 +127,12 @@ impl<K: DatabaseKey> Table<K> {
     pub fn new(key: String, fields: HashMap<String, FieldType>, records: HashMap<K, Record>) -> Self {
         Table { key, fields, records }
     }
+    
+    pub fn key_type(&self) -> Result<FieldType, Error> {
+        self.fields.get(&self.key)
+            .ok_or_else(|| Error::NotSpecifiedError("Field type of key was not specified".into()))
+            .cloned()
+    }
 
     fn validate_new_key(&self, key_value: &Value, typed_key: &K) -> Result<(), Error> {
         if key_value.get_field_type() != K::get_field_type() {
@@ -189,6 +195,10 @@ impl<K: DatabaseKey> Database<K> {
     pub fn add_table(&mut self, name: String, table: Table<K>) -> Result<(), Error> {
         if self.tables.contains_key(&name) {
             return Err(Error::AlreadyExistsError(format!("Table '{}' already exists", name)));
+        }
+        
+        if table.key_type()? != K::get_field_type() {
+            return Err(Error::TypeError("Mismatched key type".to_string()));
         }
 
         self.tables.insert(name, table);
