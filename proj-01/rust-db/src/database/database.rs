@@ -9,11 +9,12 @@ use crate::parser::parse_command;
 #[derive(Clone, Debug)]
 pub struct Database<K: DatabaseKey> {
     tables: HashMap<String, Table<K>>,
+    session_commands: Vec<String>
 }
 
 impl<K: DatabaseKey> Database<K> {
     pub fn new() -> Self {
-        Self { tables: HashMap::new(), }
+        Self { tables: HashMap::new(), session_commands: Vec::new() }
     }
 
     pub fn add_table(&mut self, name: String, table: Table<K>) -> Result<(), Error> {
@@ -66,9 +67,14 @@ impl AnyDatabase {
     }
 
     pub fn execute_command(&mut self, command: &str) -> Result<ExecutionSuccessValue, Error> {
+        let result = match self {
+            AnyDatabase::StringDatabase(db) => db.execute_command(command)?,
+            AnyDatabase::IntDatabase(db) => db.execute_command(command)?,
+        };
         match self {
-            AnyDatabase::StringDatabase(db) => db.execute_command(command),
-            AnyDatabase::IntDatabase(db) => db.execute_command(command),
+            AnyDatabase::StringDatabase(db) => { db.session_commands.push(command.to_string()); }
+            AnyDatabase::IntDatabase(db) => { db.session_commands.push(command.to_string()); }
         }
+        Ok(result)
     }
 }
