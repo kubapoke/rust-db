@@ -459,4 +459,25 @@ mod tests {
         assert!(matches!(result, Ok(_)));
         assert_eq!(db.get_table(&"library".to_string()).unwrap().len(), 1)
     }
+
+    #[test]
+    fn test_parse_delete_command() {
+        let mut db = Database::<String>::new();
+
+        let cmd = "CREATE library KEY id
+        FIELDS id: String, year: Int";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"1\", year = 2000 INTO library";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "DELETE \"1\" FROM library";
+
+        let result = db.execute_command(cmd);
+
+        assert!(matches!(result, Ok(_)));
+        assert_eq!(db.get_table(&"library".to_string()).unwrap().len(), 0)
+    }
 }
