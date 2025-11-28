@@ -46,7 +46,7 @@ impl Display for ExecutionSuccessValue {
         match self {
             ExecutionSuccessValue::Success(msg) => writeln!(f, "{}", msg),
             ExecutionSuccessValue::SuccessFileOperation(msg) => writeln!(f, "{}", msg),
-            ExecutionSuccessValue::SelectResult(r) => write!(f, "{}", r),
+            ExecutionSuccessValue::SelectResult(r) => writeln!(f, "{}", r),
         }
     }
 }
