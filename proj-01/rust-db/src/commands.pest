@@ -25,12 +25,12 @@ SAVE_AS = @{ "SAVE_AS" ~ !ident_char }
 READ_FROM = @{ "READ_FROM" ~ !ident_char }
 
 // single string tokens
-eq = @{ "=" }
+equal = @{ "=" }
 neq = @{ "!=" }
 leq = @{ "<=" }
-lt = @{ "<" }
+ltn = @{ "<" }
 geq = @{ ">=" }
-gt = @{ ">" }
+gtn = @{ ">" }
 int_type = @{ "Int" }
 float_type = @{ "Float" }
 bool_type = @{ "Bool" }
@@ -39,7 +39,7 @@ true_value = @{ "true" }
 false_value = @{ "false" }
 
 // choice sets
-comp_op = { eq | neq | leq | lt | geq | gt }
+comp_op = { equal | neq | leq | ltn | geq | gtn }
 decl_type = { int_type | float_type | string_type | bool_type }
 key_type_def = { int | quoted_string }
 any_type_def = { numeric | bool | quoted_string }

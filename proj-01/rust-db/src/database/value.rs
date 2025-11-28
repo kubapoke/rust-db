@@ -1,4 +1,5 @@
 ﻿use std::cmp::Ordering;
+use std::fmt::{Display, Formatter};
 use crate::database::types::FieldType;
 use crate::errors::Error;
 
@@ -61,6 +62,17 @@ impl Value {
             Value::String(_) => 1,
             Value::Int(_) => 2,
             Value::Float(_) => 3,
+        }
+    }
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Value::Bool(b) => write!(f, "{}", b),
+            Value::String(s) => write!(f, "\"{}\"", s),
+            Value::Int(i) => write!(f, "{}", i),
+            Value::Float(fl) => write!(f, "{}", fl),
         }
     }
 }

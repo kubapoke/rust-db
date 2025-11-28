@@ -1,6 +1,6 @@
 ﻿use std::cmp::Ordering;
 use crate::database::record::Record;
-use crate::database::value::{compare_value_intermediate_value, IntermediateValue, Value};
+use crate::database::value::{compare_value_intermediate_value, IntermediateValue};
 use crate::errors::Error;
 
 pub enum CompOp {
@@ -30,8 +30,8 @@ impl Comparison {
 
 impl Evaluable for Comparison {
     fn evaluate(&self, r: &Record) -> Result<bool, Error> {
-        let field_value = r.values.get(self.field.as_str())
-            .ok_or_else(|| Error::MissingFieldError("Missing field value during evaluation".to_string()))?;
+        let field_value = r.values.get(&self.field)
+            .ok_or_else(|| Error::MissingFieldError(format!("Missing field '{}' during evaluation", self.field)))?;
 
         let comp_result = compare_value_intermediate_value(field_value, &self.constant)?;
 
@@ -48,47 +48,47 @@ impl Evaluable for Comparison {
     }
 }
 
-pub struct ComparisonAnd<'a> {
-    left: &'a AnyEvaluable<'a>,
-    right: &'a AnyEvaluable<'a>,
+pub struct ComparisonAnd {
+    left: Box<AnyEvaluable>,
+    right: Box<AnyEvaluable>,
 }
 
-impl<'a> ComparisonAnd<'a> {
-    pub fn new(left: &'a AnyEvaluable, right: &'a AnyEvaluable) -> Self {
-        Self { left, right }
+impl ComparisonAnd {
+    pub fn new(left: AnyEvaluable, right: AnyEvaluable) -> Self {
+        Self { left: Box::new(left), right: Box::new(right) }
     }
 }
 
-impl Evaluable for ComparisonAnd<'_> {
+impl Evaluable for ComparisonAnd {
     fn evaluate(&self, r: &Record) -> Result<bool, Error> {
         Ok(self.left.evaluate(r)? && self.right.evaluate(r)?)
     }
 }
 
-pub struct ComparisonOr<'a> {
-    left: &'a AnyEvaluable<'a>,
-    right: &'a AnyEvaluable<'a>,
+pub struct ComparisonOr {
+    left: Box<AnyEvaluable>,
+    right: Box<AnyEvaluable>,
 }
 
-impl<'a> ComparisonOr<'a> {
-    pub fn new(left: &'a AnyEvaluable, right: &'a AnyEvaluable) -> Self {
-        Self { left, right }
+impl ComparisonOr {
+    pub fn new(left: AnyEvaluable, right: AnyEvaluable) -> Self {
+        Self { left: Box::new(left), right: Box::new(right) }
     }
 }
 
-impl Evaluable for ComparisonOr<'_> {
+impl Evaluable for ComparisonOr {
     fn evaluate(&self, r: &Record) -> Result<bool, Error> {
         Ok(self.left.evaluate(r)? || self.right.evaluate(r)?)
     }
 }
 
-pub enum AnyEvaluable<'a> {
+pub enum AnyEvaluable {
     Comp(Comparison),
-    And(ComparisonAnd<'a>),
-    Or(ComparisonOr<'a>),
+    And(ComparisonAnd),
+    Or(ComparisonOr),
 }
 
-impl Evaluable for AnyEvaluable<'_> {
+impl Evaluable for AnyEvaluable {
     fn evaluate(&self, r: &Record) -> Result<bool, Error> {
         match self {
             AnyEvaluable::Comp(c) => c.evaluate(r),

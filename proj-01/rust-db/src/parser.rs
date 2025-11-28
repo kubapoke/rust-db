@@ -1,10 +1,17 @@
 ﻿use pest::iterators::Pair;
 use pest::Parser;
+use crate::commands::clauses::clause::AnyClause;
+use crate::commands::clauses::clause::AnyClause::Order;
+use crate::commands::clauses::evaluable::{AnyEvaluable, CompOp, Comparison, ComparisonAnd, ComparisonOr};
+use crate::commands::clauses::limit::LimitClause;
+use crate::commands::clauses::order::OrderByClause;
+use crate::commands::clauses::r#where::WhereClause;
 use crate::errors::Error;
 use crate::commands::command::AnyCommand;
 use crate::commands::create::CreateCommand;
 use crate::commands::delete::DeleteCommand;
 use crate::commands::insert::InsertCommand;
+use crate::commands::select::SelectCommand;
 use crate::database::database::Database;
 use crate::database::key::DatabaseKey;
 use crate::database::types::FieldType;
@@ -27,7 +34,19 @@ fn expect_rule<'a>(pair: Option<Pair<'a, Rule>>, expected: Rule, msg: &'static s
     Ok(pair)
 }
 
-pub fn parse_command<'a, K: DatabaseKey>(input: &str, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
+fn possible_rule<'a> (pair: Option<Pair<'a, Rule>>, expected: Rule, msg: &'static str) -> Result<Option<Pair<'a, Rule>>, Error> {
+    if pair.is_none() {
+        return Ok(None);
+    }
+
+    let pair = pair.ok_or_else(|| Error::NoTokenError(msg.to_string()))?;
+    if pair.as_rule() != expected {
+        return Err(Error::UnknownTokenError(msg.to_string()));
+    }
+    Ok(Some(pair))
+}
+
+pub fn parse_command<'a, K: DatabaseKey>(input: &'a str, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
     let mut pairs = match QueryParser::parse(Rule::command, input.trim()) {
         Ok(pairs) => pairs,
         Err(e) => {
@@ -56,6 +75,17 @@ pub fn parse_ident(ident_pair: Pair<Rule>) -> Result<String, Error> {
     Ok(pair.as_str().to_string())
 }
 
+pub fn parse_ident_list(ident_list_pair: Pair<Rule>) -> Result<Vec<String>, Error> {
+    let mut idents = Vec::new();
+
+    for decl_pair in ident_list_pair.into_inner() {
+        let ident = parse_ident(decl_pair)?;
+        idents.push(ident);
+    }
+
+    Ok(idents)
+}
+
 pub fn parse_numeric(numeric_pair: Pair<Rule>) -> Result<IntermediateValue, Error> {
     let pair = expect_rule(Some(numeric_pair), Rule::numeric, "Expected an numeric")?;
     let float = pair.as_str().parse::<f64>()
@@ -76,6 +106,16 @@ pub fn parse_key_int(int_pair: Pair<Rule>) -> Result<KeyValue, Error> {
     Ok(KeyValue::Int(integer))
 }
 
+pub fn parse_positive_int(positive_int_pair: Pair<Rule>) -> Result<usize, Error> {
+    let pair = expect_rule(positive_int_pair.into_inner().next(), Rule::positive_int, "Expected a positive integer")?;
+    let integer = pair.as_str().parse::<usize>()
+        .map_err(|e| Error::ParseError(format!("Failed to parse positive integer: {}", e)))?;
+    if integer <= 0 {
+        return Err(Error::ParseError("Positive integer is zero or less".to_string()));
+    }
+    Ok(integer)
+}
+
 pub fn parse_key_string(string_pair: Pair<Rule>) -> Result<KeyValue, Error> {
     let pair = expect_rule(Some(string_pair), Rule::string, "Expected a string")?;
     let string = pair.as_str().to_string();
@@ -89,6 +129,20 @@ pub fn parse_bool(bool_pair: Pair<Rule>) -> Result<IntermediateValue, Error> {
         Rule::true_value => Ok(IntermediateValue::Bool(true)),
         Rule::false_value => Ok(IntermediateValue::Bool(false)),
         _ => Err(Error::UnknownTokenError(String::from("Unexpected token in bool")))
+    }
+}
+
+pub fn parse_comp_op(comp_op_pair: Pair<Rule>) -> Result<CompOp, Error> {
+    let comp_op = expect_any_rule(comp_op_pair.into_inner().next(), "Expected comparison operation")?;
+
+    match comp_op.as_rule() {
+        Rule::equal => Ok(CompOp::Eq),
+        Rule::neq => Ok(CompOp::Neq),
+        Rule::leq => Ok(CompOp::Leq),
+        Rule::ltn => Ok(CompOp::Lt),
+        Rule::geq => Ok(CompOp::Geq),
+        Rule::gtn => Ok(CompOp::Gt),
+        _ => Err(Error::UnknownTokenError(String::from("Unexpected token in comp_op")))
     }
 }
 
@@ -162,8 +216,138 @@ pub fn parse_decl(decl_pair: Pair<Rule>) -> Result<(String, FieldType), Error> {
     Ok((key, field_type))
 }
 
-pub fn parse_select_query<'a, K: DatabaseKey>(select_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
-    todo!()
+pub fn parse_select_query<'a, K: DatabaseKey>(select_query_pair: Pair<'a, Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
+    let items: Vec<_> = select_query_pair.into_inner().collect();
+
+    let select_clause_pair = expect_rule(items.get(0).cloned(), Rule::select_clause, "Missing or invalid clause")?;
+    let from_clause_pair = expect_rule(items.get(1).cloned(), Rule::from_clause, "Missing or invalid clause")?;
+    let where_clause_pair = possible_rule(items.get(2).cloned(), Rule::where_clause, "Invalid clause")?;
+    let order_clause_pair = possible_rule(items.get(3).cloned(), Rule::order_clause, "Invalid clause")?;
+    let limit_clause_pair = possible_rule(items.get(4).cloned(), Rule::limit_clause, "Invalid clause")?;
+
+    let fields = parse_select_clause(select_clause_pair)?;
+    let table_id = parse_from_clause(from_clause_pair)?;
+    let table = database.get_table(&table_id)?;
+
+    let mut clauses = Vec::new();
+
+    if let Some(pair) = where_clause_pair {
+        clauses.push(parse_where_clause(pair)?);
+    }
+    if let Some(pair) = order_clause_pair {
+        clauses.push(parse_order_clause(pair)?);
+    }
+    if let Some(pair) = limit_clause_pair {
+        clauses.push(parse_limit_clause(pair)?);
+    }
+
+    Ok(AnyCommand::Select(SelectCommand::new(table, fields, clauses)))
+}
+
+pub fn parse_select_clause(select_clause_pair: Pair<Rule>) -> Result<Vec<String>, Error> {
+    let select_clause = select_clause_pair.into_inner();
+    
+    let fields_pair = expect_rule(select_clause.skip(1).next(), Rule::ident_list, "Missing or invalid fields list")?;
+
+    let fields = parse_ident_list(fields_pair)?;
+
+    Ok(fields)
+}
+
+pub fn parse_from_clause(from_clause_pair: Pair<Rule>) -> Result<String, Error> {
+    let from_clause = from_clause_pair.into_inner();
+
+    let ident_pair = expect_rule(from_clause.skip(1).next(), Rule::ident, "Missing or invalid identifier")?;
+
+    let ident = parse_ident(ident_pair)?;
+
+    Ok(ident)
+}
+
+pub fn parse_where_clause(where_clause_pair: Pair<Rule>) -> Result<AnyClause, Error> {
+    let where_clause = where_clause_pair.into_inner();
+
+    let comparison_or_pair = expect_rule(where_clause.skip(1).next(), Rule::comparison_or, "Missing or invalid comparison")?;
+
+    let comparison = parse_comparison_or(comparison_or_pair)?;
+
+    Ok(AnyClause::Where(WhereClause::new(comparison)))
+}
+
+pub fn parse_comparison_or(comparison_or_pair: Pair<Rule>) -> Result<AnyEvaluable, Error> {
+    let mut comparison_or = comparison_or_pair.into_inner();
+
+    let comparison_and_pair = expect_rule(comparison_or.next(), Rule::comparison_and, "Missing or invalid comparison")?;
+    let comparison_or_pair = possible_rule(comparison_or.next(), Rule::comparison_or, "Invalid comparison")?;
+
+    let comparison_and = parse_comparison_and(comparison_and_pair)?;
+
+    if let Some(c) = comparison_or_pair {
+        let comparison_or = parse_comparison_or(c)?;
+        return Ok(AnyEvaluable::Or(ComparisonOr::new(comparison_and, comparison_or)));
+    }
+
+    Ok(comparison_and)
+}
+
+pub fn parse_comparison_and(comparison_and_pair: Pair<Rule>) -> Result<AnyEvaluable, Error> {
+    let mut comparison_and = comparison_and_pair.into_inner();
+
+    let comparison_braced_pair = expect_rule(comparison_and.next(), Rule::comparison_braced, "Missing or invalid comparison")?;
+    let comparison_and_pair = possible_rule(comparison_and.next(), Rule::comparison_and, "Invalid comparison")?;
+
+    let comparison_braced = parse_comparison_braced(comparison_braced_pair)?;
+
+    if let Some(c) = comparison_and_pair {
+        let comparison_and = parse_comparison_and(c)?;
+        return Ok(AnyEvaluable::And(ComparisonAnd::new(comparison_braced, comparison_and)));
+    }
+
+    Ok(comparison_braced)
+}
+
+pub fn parse_comparison_braced(comparison_braced_pair: Pair<Rule>) -> Result<AnyEvaluable, Error> {
+    let comparison_braced = expect_any_rule(comparison_braced_pair.into_inner().next(), "Expected a comparison")?;
+
+    match comparison_braced.as_rule() {
+        Rule::comparison => parse_comparison(comparison_braced),
+        Rule::comparison_or => parse_comparison_or(comparison_braced),
+        _ => Err(Error::UnknownTokenError(String::from("Unknown or invalid type")))
+    }
+}
+
+pub fn parse_comparison(comparison_pair: Pair<Rule>) -> Result<AnyEvaluable, Error> {
+    let mut comparison = comparison_pair.into_inner();
+
+    let field_pair = expect_rule(comparison.next(), Rule::ident, "Missing or invalid identifier")?;
+    let op_pair = expect_rule(comparison.next(), Rule::comp_op, "Missing or invalid operator")?;
+    let constant_pair = expect_rule(comparison.next(), Rule::any_type_def, "Missing or invalid constant")?;
+
+    let field = parse_ident(field_pair)?;
+    let op = parse_comp_op(op_pair)?;
+    let constant = parse_any_type_def(constant_pair)?;
+
+    Ok(AnyEvaluable::Comp(Comparison::new(field, op, constant)))
+}
+
+pub fn parse_order_clause(order_clause_pair: Pair<Rule>) -> Result<AnyClause, Error> {
+    let order_clause = order_clause_pair.into_inner();
+
+    let fields_pair = expect_rule(order_clause.skip(1).next(), Rule::ident_list, "Missing or invalid field list")?;
+
+    let fields = parse_ident_list(fields_pair)?;
+
+    Ok(AnyClause::Order(OrderByClause::new(fields)))
+}
+
+pub fn parse_limit_clause(limit_clause_pair: Pair<Rule>) -> Result<AnyClause, Error> {
+    let order_clause = limit_clause_pair.into_inner();
+
+    let amount_pair = expect_rule(order_clause.skip(1).next(), Rule::positive_int, "Missing or invalid field list")?;
+
+    let amount = parse_positive_int(amount_pair)?;
+
+    Ok(AnyClause::Limit(LimitClause::new(amount)))
 }
 
 pub fn parse_insert_query<'a, K: DatabaseKey>(insert_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {

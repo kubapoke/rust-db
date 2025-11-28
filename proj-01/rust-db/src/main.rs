@@ -79,6 +79,15 @@ fn main() {
     println!();
 
     match db.execute_command(
+        "SELECT title, year FROM library WHERE year >= 2013"
+    ) {
+        Ok(_) => println!("{:?}", db),
+        Err(e) => { println!("{}", e); return; }
+    }
+    println!();
+    println!();
+
+    match db.execute_command(
         "DELETE \"lib2\" FROM library"
     ) {
         Ok(_) => println!("{:?}", db),

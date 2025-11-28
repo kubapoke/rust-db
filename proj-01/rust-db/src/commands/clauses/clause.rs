@@ -8,13 +8,13 @@ pub trait Clause {
     fn apply(&self, slice: TableSlice) -> Result<TableSlice, Error>;
 }
 
-pub enum AnyClause<'a> {
-    Where(WhereClause<'a>),
+pub enum AnyClause {
+    Where(WhereClause),
     Order(OrderByClause),
     Limit(LimitClause),
 }
 
-impl Clause for AnyClause<'_> {
+impl Clause for AnyClause {
     fn apply(&self, slice: TableSlice) -> Result<TableSlice, Error> {
         match self {
             Self::Where(clause) => clause.apply(slice),

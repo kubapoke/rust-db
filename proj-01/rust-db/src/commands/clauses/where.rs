@@ -3,17 +3,17 @@ use crate::commands::clauses::evaluable::{AnyEvaluable, Evaluable};
 use crate::database::slice::TableSlice;
 use crate::errors::Error;
 
-pub struct WhereClause<'a> {
-    pub evaluation: AnyEvaluable<'a>,
+pub struct WhereClause {
+    pub evaluation: AnyEvaluable,
 }
 
-impl WhereClause<'_> {
+impl<'a> WhereClause {
     pub fn new(evaluation: AnyEvaluable) -> WhereClause {
         WhereClause { evaluation }
     }
 }
 
-impl Clause for WhereClause<'_> {
+impl Clause for WhereClause {
     fn apply(&self, slice: TableSlice) -> Result<TableSlice, Error> {
         let mut filtered = Vec::new();
 

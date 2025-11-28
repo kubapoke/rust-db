@@ -5,6 +5,7 @@ use crate::commands::read::ReadCommand;
 use crate::commands::save::SaveCommand;
 use crate::commands::select::SelectCommand;
 use crate::database::key::DatabaseKey;
+use crate::database::slice::SelectResult;
 use crate::errors::Error;
 
 pub trait Command {
@@ -35,4 +36,5 @@ impl<K: DatabaseKey> Command for AnyCommand<'_, K> {
 
 pub enum ExecutionSuccessValue {
     Success(String),
+    SelectResult(SelectResult),
 }
