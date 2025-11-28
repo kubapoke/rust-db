@@ -44,9 +44,9 @@ pub enum ExecutionSuccessValue {
 impl Display for ExecutionSuccessValue {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
-            ExecutionSuccessValue::Success(msg) => write!(f, "{}\n", msg),
-            ExecutionSuccessValue::SuccessFileOperation(msg) => write!(f, "{}\n", msg),
-            ExecutionSuccessValue::SelectResult(r) => write!(f, "{}\n", r),
+            ExecutionSuccessValue::Success(msg) => writeln!(f, "{}", msg),
+            ExecutionSuccessValue::SuccessFileOperation(msg) => writeln!(f, "{}", msg),
+            ExecutionSuccessValue::SelectResult(r) => write!(f, "{}", r),
         }
     }
 }

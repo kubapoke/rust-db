@@ -64,8 +64,7 @@ fn main() -> Result<(), Error> {
         }
 
         let command = if line.starts_with("CREATE") {
-            let line = read_create_command(line.clone())?;
-            line
+            read_create_command(line.clone())?
         } else {
             line.clone()
         };

@@ -83,8 +83,12 @@ impl<K: DatabaseKey> Table<K> {
         
         TableSlice::new(records)
     }
-    
+
     pub fn len(&self) -> usize {
         self.records.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }
