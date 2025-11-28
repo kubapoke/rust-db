@@ -92,3 +92,41 @@ impl AnyDatabase {
         Ok(result)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::database::table::Table;
+
+    #[test]
+    fn test_add_table() {
+        let mut db: Database<i64> = Database::new();
+
+        let table = Table::new(
+            "id".to_string(),
+            HashMap::from([("id".to_string(), FieldType::Int)]),
+            HashMap::new(),
+        );
+
+        assert!(db.add_table("users".to_string(), table.clone()).is_ok());
+        assert!(db.has_table(&"users".to_string()));
+
+        let duplicate = db.add_table("users".to_string(), table);
+        assert!(matches!(duplicate, Err(Error::AlreadyExistsError(_))));
+    }
+
+    #[test]
+    fn test_any_database_execute_session_commands() {
+        let mut db = AnyDatabase::new(KeyType::Int);
+
+        let result = db.execute_command("CREATE users KEY id
+            FIELDS id: Int");
+
+        assert!(result.is_ok());
+
+        if let AnyDatabase::IntDatabase(inner) = db {
+            assert_eq!(inner.get_session_commands().len(), 1);
+            assert!(inner.has_table(&"users".to_string()))
+        }
+    }
+}

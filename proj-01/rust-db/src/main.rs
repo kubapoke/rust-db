@@ -103,7 +103,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_create_command_logic_manual() {
+    fn test_read_create_command() {
         let first = "CREATE table KEY id".to_string();
         let second = "FIELDS id: Int".to_string();
 
