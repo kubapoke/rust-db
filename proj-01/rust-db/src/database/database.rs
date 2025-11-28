@@ -71,10 +71,14 @@ impl AnyDatabase {
             AnyDatabase::StringDatabase(db) => db.execute_command(command)?,
             AnyDatabase::IntDatabase(db) => db.execute_command(command)?,
         };
-        match self {
-            AnyDatabase::StringDatabase(db) => { db.session_commands.push(command.to_string()); }
-            AnyDatabase::IntDatabase(db) => { db.session_commands.push(command.to_string()); }
+
+        if !matches!(result, ExecutionSuccessValue::SuccessFileOperation(_)) {
+            match self {
+                AnyDatabase::StringDatabase(db) => db.session_commands.push(command.to_string()),
+                AnyDatabase::IntDatabase(db) => db.session_commands.push(command.to_string()),
+            }
         }
+
         Ok(result)
     }
 }

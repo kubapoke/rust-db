@@ -36,5 +36,6 @@ impl<K: DatabaseKey> Command for AnyCommand<'_, K> {
 
 pub enum ExecutionSuccessValue {
     Success(String),
+    SuccessFileOperation(String),
     SelectResult(SelectResult),
 }
