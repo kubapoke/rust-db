@@ -111,9 +111,6 @@ pub fn parse_positive_int(positive_int_pair: Pair<Rule>) -> Result<usize, Error>
     let pair = expect_rule(Some(positive_int_pair), Rule::positive_int, "Expected a positive integer")?;
     let integer = pair.as_str().parse::<usize>()
         .map_err(|e| Error::ParseError(format!("Failed to parse positive integer: {}", e)))?;
-    if integer <= 0 {
-        return Err(Error::ParseError("Positive integer is zero or less".to_string()));
-    }
     Ok(integer)
 }
 
