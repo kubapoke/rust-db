@@ -1,4 +1,5 @@
-﻿use crate::database::record::Record;
+﻿use std::fmt::{Display, Formatter};
+use crate::database::record::Record;
 use crate::database::value::Value;
 
 #[derive(Clone, Debug)]
@@ -17,13 +18,15 @@ pub struct SelectRow {
     pub values: Vec<(String, Value)>,
 }
 
-impl SelectRow {
-    pub fn to_string(&self) -> String {
-        self.values
+impl Display for SelectRow {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let values = self.values
             .iter()
             .map(|(field, value)| format!("{}: {}", field, value))
             .collect::<Vec<_>>()
-            .join(", ")
+            .join(", ");
+        
+        write!(f, "{}", values)
     }
 }
 
@@ -32,12 +35,14 @@ pub struct SelectResult {
     pub rows: Vec<SelectRow>,
 }
 
-impl SelectResult {
-    pub fn to_string(&self) -> String {
-        self.rows
+impl Display for SelectResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let rows = self.rows
             .iter()
             .map(|row| row.to_string())
             .collect::<Vec<_>>()
-            .join("\n")
+            .join("\n");
+        
+        write!(f, "{}", rows)
     }
 }

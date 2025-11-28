@@ -1,4 +1,5 @@
-﻿use crate::commands::create::CreateCommand;
+﻿use std::fmt::{Display, Formatter};
+use crate::commands::create::CreateCommand;
 use crate::commands::delete::DeleteCommand;
 use crate::commands::insert::InsertCommand;
 use crate::commands::read::ReadCommand;
@@ -38,4 +39,14 @@ pub enum ExecutionSuccessValue {
     Success(String),
     SuccessFileOperation(String),
     SelectResult(SelectResult),
+}
+
+impl Display for ExecutionSuccessValue {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            ExecutionSuccessValue::Success(msg) => write!(f, "{}", msg),
+            ExecutionSuccessValue::SuccessFileOperation(msg) => write!(f, "{}", msg),
+            ExecutionSuccessValue::SelectResult(r) => write!(f, "{}", r),
+        }
+    }
 }

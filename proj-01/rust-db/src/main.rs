@@ -23,11 +23,7 @@ fn execute_command (database: &mut AnyDatabase, command_str: &str) {
         }
     };
 
-    match result {
-        ExecutionSuccessValue::Success(msg) => println!("{}\n", msg),
-        ExecutionSuccessValue::SuccessFileOperation(msg) => println!("{}\n", msg),
-        ExecutionSuccessValue::SelectResult(res) => println!("{}\n", res.to_string()),
-    };
+    println!("{}", result);
 }
 
 fn main() {

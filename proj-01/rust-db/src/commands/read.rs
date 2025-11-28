@@ -19,12 +19,8 @@ impl<'a, K: DatabaseKey> ReadCommand<'a, K> {
         println!("{}", command_str);
         let result = self.database.execute_command(command_str)?;
 
-        match result {
-            ExecutionSuccessValue::Success(msg) => println!("{}\n", msg),
-            ExecutionSuccessValue::SuccessFileOperation(msg) => println!("{}\n", msg),
-            ExecutionSuccessValue::SelectResult(res) => println!("{}\n", res.to_string()),
-        }
-
+        println!("{}", result);
+        
         Ok(())
     }
 }
