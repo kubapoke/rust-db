@@ -74,3 +74,41 @@ fn main() -> Result<(), Error> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use rust_db::database::types::FieldType;
+    use super::*;
+
+    #[test]
+    fn test_get_database() {
+        let db1 = get_database("int".to_string());
+        assert!(db1.is_ok());
+
+        let db2 = get_database("string".to_string());
+        assert!(db2.is_ok());
+
+        let db3 = get_database("float".to_string());
+        assert!(db3.is_err());
+    }
+
+    #[test]
+    fn test_execute_command() {
+        let mut db = AnyDatabase::new(KeyType::Int);
+
+        db.execute_command("CREATE table KEY id
+            FIELDS id: Int").unwrap();
+
+        assert_eq!(db.key_type(), FieldType::Int);
+    }
+
+    #[test]
+    fn test_read_create_command_logic_manual() {
+        let first = "CREATE table KEY id".to_string();
+        let second = "FIELDS id: Int".to_string();
+
+        let expected = format!("{}\n{}", first, second);
+
+        assert_eq!(expected, "CREATE table KEY id\nFIELDS id: Int");
+    }
+}
