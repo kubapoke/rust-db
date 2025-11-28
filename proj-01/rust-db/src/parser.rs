@@ -428,6 +428,8 @@ pub fn parse_save_query<'a, K: DatabaseKey>(save_query_pair: Pair<Rule>, databas
 
 #[cfg(test)]
 mod tests {
+    use crate::commands::command::ExecutionSuccessValue;
+    use crate::database::value::Value;
     use super::*;
 
     #[test]
@@ -479,5 +481,138 @@ mod tests {
 
         assert!(matches!(result, Ok(_)));
         assert_eq!(db.get_table(&"library".to_string()).unwrap().len(), 0)
+    }
+
+    #[test]
+    fn test_parse_select_command() {
+        let mut db = Database::<String>::new();
+
+        let cmd = "CREATE library KEY id
+        FIELDS id: String, year: Int";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"1\", year = 2002 INTO library";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"2\", year = 2001 INTO library";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"3\", year = 2000 INTO library";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "SELECT id, year FROM library";
+
+        let result = db.execute_command(cmd);
+
+        assert!(matches!(result, Ok(_)));
+        if let Ok(ExecutionSuccessValue::SelectResult(r)) = result {
+            assert_eq!(r.rows.len(), 3);
+        }
+    }
+
+    #[test]
+    fn test_parse_select_where_command() {
+        let mut db = Database::<String>::new();
+
+        let cmd = "CREATE library KEY id
+        FIELDS id: String, year: Int";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"1\", year = 2002 INTO library";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"2\", year = 2001 INTO library";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"3\", year = 2000 INTO library";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "SELECT id, year FROM library WHERE id = \"1\" OR year < 2001";
+
+        let result = db.execute_command(cmd);
+
+        assert!(matches!(result, Ok(_)));
+        if let Ok(ExecutionSuccessValue::SelectResult(r)) = result {
+            assert_eq!(r.rows.len(), 2);
+        }
+    }
+
+    #[test]
+    fn test_parse_select_order_command() {
+        let mut db = Database::<String>::new();
+
+        let cmd = "CREATE library KEY id
+        FIELDS id: String, year: Int";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"1\", year = 2002 INTO library";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"2\", year = 2001 INTO library";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"3\", year = 2000 INTO library";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "SELECT id, year FROM library ORDER_BY year";
+
+        let result = db.execute_command(cmd);
+
+        assert!(matches!(result, Ok(_)));
+        if let Ok(ExecutionSuccessValue::SelectResult(r)) = result {
+            assert_eq!(r.rows.len(), 3);
+            if let Value::String(id) = &r.rows[0].values[0].1 {
+                assert_eq!(id, "3")
+            }
+            if let Value::String(id) = &r.rows[1].values[0].1 {
+                assert_eq!(id, "2")
+            }
+            if let Value::String(id) = &r.rows[2].values[0].1 {
+                assert_eq!(id, "1")
+            }
+        }
+    }
+
+    #[test]
+    fn test_parse_select_limit_command() {
+        let mut db = Database::<String>::new();
+
+        let cmd = "CREATE library KEY id
+        FIELDS id: String, year: Int";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"1\", year = 2002 INTO library";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"2\", year = 2001 INTO library";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"3\", year = 2000 INTO library";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "SELECT id, year FROM library LIMIT 1";
+
+        let result = db.execute_command(cmd);
+
+        assert!(matches!(result, Ok(_)));
+        if let Ok(ExecutionSuccessValue::SelectResult(r)) = result {
+            assert_eq!(r.rows.len(), 1);
+        }
     }
 }
