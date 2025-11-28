@@ -425,3 +425,38 @@ pub fn parse_save_query<'a, K: DatabaseKey>(save_query_pair: Pair<Rule>, databas
 
     Ok(AnyCommand::Save(SaveCommand::new(path, database.get_session_commands())))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_create_command() {
+        let mut db = Database::<String>::new();
+
+        let cmd = "CREATE library KEY id
+            FIELDS id: String, year: Int";
+
+        let result = db.execute_command(cmd);
+
+        assert!(matches!(result, Ok(_)));
+        assert!(db.get_table(&"library".to_string()).is_ok());
+    }
+
+    #[test]
+    fn test_parse_insert_command() {
+        let mut db = Database::<String>::new();
+
+        let cmd = "CREATE library KEY id
+        FIELDS id: String, year: Int";
+
+        db.execute_command(cmd).unwrap();
+
+        let cmd = "INSERT id = \"1\", year = 2000 INTO library";
+
+        let result = db.execute_command(cmd);
+
+        assert!(matches!(result, Ok(_)));
+        assert_eq!(db.get_table(&"library".to_string()).unwrap().len(), 1)
+    }
+}

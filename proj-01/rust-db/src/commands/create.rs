@@ -51,7 +51,7 @@ mod tests {
     use crate::commands::command::{Command, ExecutionSuccessValue};
 
     #[test]
-    fn test_create() {
+    fn test_create_command() {
         let mut db = Database::<String>::new();
 
         let mut cmd = CreateCommand::new(
@@ -66,19 +66,6 @@ mod tests {
 
         let result = cmd.execute().unwrap();
         assert!(matches!(result, ExecutionSuccessValue::Success(_)));
-        assert!(db.get_table(&"library".to_string()).is_ok());
-    }
-
-    #[test]
-    fn test_create_command() {
-        let mut db = Database::<String>::new();
-
-        let cmd = "CREATE library KEY id
-        FIELDS id: String, year: Int";
-
-        let result = db.execute_command(cmd);
-
-        assert!(matches!(result, Ok(_)));
         assert!(db.get_table(&"library".to_string()).is_ok());
     }
 }
