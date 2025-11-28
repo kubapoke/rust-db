@@ -1,7 +1,6 @@
 ﻿use pest::iterators::Pair;
 use pest::Parser;
 use crate::commands::clauses::clause::AnyClause;
-use crate::commands::clauses::clause::AnyClause::Order;
 use crate::commands::clauses::evaluable::{AnyEvaluable, CompOp, Comparison, ComparisonAnd, ComparisonOr};
 use crate::commands::clauses::limit::LimitClause;
 use crate::commands::clauses::order::OrderByClause;
@@ -107,7 +106,7 @@ pub fn parse_key_int(int_pair: Pair<Rule>) -> Result<KeyValue, Error> {
 }
 
 pub fn parse_positive_int(positive_int_pair: Pair<Rule>) -> Result<usize, Error> {
-    let pair = expect_rule(positive_int_pair.into_inner().next(), Rule::positive_int, "Expected a positive integer")?;
+    let pair = expect_rule(Some(positive_int_pair), Rule::positive_int, "Expected a positive integer")?;
     let integer = pair.as_str().parse::<usize>()
         .map_err(|e| Error::ParseError(format!("Failed to parse positive integer: {}", e)))?;
     if integer <= 0 {
@@ -217,13 +216,10 @@ pub fn parse_decl(decl_pair: Pair<Rule>) -> Result<(String, FieldType), Error> {
 }
 
 pub fn parse_select_query<'a, K: DatabaseKey>(select_query_pair: Pair<'a, Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
-    let items: Vec<_> = select_query_pair.into_inner().collect();
+    let mut inner_rules = select_query_pair.into_inner();
 
-    let select_clause_pair = expect_rule(items.get(0).cloned(), Rule::select_clause, "Missing or invalid clause")?;
-    let from_clause_pair = expect_rule(items.get(1).cloned(), Rule::from_clause, "Missing or invalid clause")?;
-    let where_clause_pair = possible_rule(items.get(2).cloned(), Rule::where_clause, "Invalid clause")?;
-    let order_clause_pair = possible_rule(items.get(3).cloned(), Rule::order_clause, "Invalid clause")?;
-    let limit_clause_pair = possible_rule(items.get(4).cloned(), Rule::limit_clause, "Invalid clause")?;
+    let select_clause_pair = expect_rule(inner_rules.next(), Rule::select_clause, "Missing Select clause")?;
+    let from_clause_pair = expect_rule(inner_rules.next(), Rule::from_clause, "Missing From clause")?;
 
     let fields = parse_select_clause(select_clause_pair)?;
     let table_id = parse_from_clause(from_clause_pair)?;
@@ -231,14 +227,19 @@ pub fn parse_select_query<'a, K: DatabaseKey>(select_query_pair: Pair<'a, Rule>,
 
     let mut clauses = Vec::new();
 
-    if let Some(pair) = where_clause_pair {
-        clauses.push(parse_where_clause(pair)?);
-    }
-    if let Some(pair) = order_clause_pair {
-        clauses.push(parse_order_clause(pair)?);
-    }
-    if let Some(pair) = limit_clause_pair {
-        clauses.push(parse_limit_clause(pair)?);
+    for pair in inner_rules {
+        match pair.as_rule() {
+            Rule::where_clause => {
+                clauses.push(parse_where_clause(pair)?);
+            },
+            Rule::order_clause => {
+                clauses.push(parse_order_clause(pair)?);
+            },
+            Rule::limit_clause => {
+                clauses.push(parse_limit_clause(pair)?);
+            },
+            _ => { return Err(Error::UnknownTokenError(String::from("Unexpected token in select clause"))); }
+        }
     }
 
     Ok(AnyCommand::Select(SelectCommand::new(table, fields, clauses)))
@@ -278,7 +279,7 @@ pub fn parse_comparison_or(comparison_or_pair: Pair<Rule>) -> Result<AnyEvaluabl
     let mut comparison_or = comparison_or_pair.into_inner();
 
     let comparison_and_pair = expect_rule(comparison_or.next(), Rule::comparison_and, "Missing or invalid comparison")?;
-    let comparison_or_pair = possible_rule(comparison_or.next(), Rule::comparison_or, "Invalid comparison")?;
+    let comparison_or_pair = possible_rule(comparison_or.skip(1).next(), Rule::comparison_or, "Invalid comparison")?;
 
     let comparison_and = parse_comparison_and(comparison_and_pair)?;
 
@@ -294,7 +295,7 @@ pub fn parse_comparison_and(comparison_and_pair: Pair<Rule>) -> Result<AnyEvalua
     let mut comparison_and = comparison_and_pair.into_inner();
 
     let comparison_braced_pair = expect_rule(comparison_and.next(), Rule::comparison_braced, "Missing or invalid comparison")?;
-    let comparison_and_pair = possible_rule(comparison_and.next(), Rule::comparison_and, "Invalid comparison")?;
+    let comparison_and_pair = possible_rule(comparison_and.skip(1).next(), Rule::comparison_and, "Invalid comparison")?;
 
     let comparison_braced = parse_comparison_braced(comparison_braced_pair)?;
 
