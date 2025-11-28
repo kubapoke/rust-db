@@ -449,14 +449,14 @@ mod tests {
 
     #[test]
     fn test_parse_insert_command() {
-        let mut db = Database::<String>::new();
+        let mut db = Database::<i64>::new();
 
         let cmd = "CREATE library KEY id
-        FIELDS id: String, year: Int";
+        FIELDS id: Int, year: Int";
 
         db.execute_command(cmd).unwrap();
 
-        let cmd = "INSERT id = \"1\", year = 2000 INTO library";
+        let cmd = "INSERT id = 1, year = 2000 INTO library";
 
         let result = db.execute_command(cmd);
 
@@ -487,22 +487,22 @@ mod tests {
 
     #[test]
     fn test_parse_select_command() {
-        let mut db = Database::<String>::new();
+        let mut db = Database::<i64>::new();
 
         let cmd = "CREATE library KEY id
-        FIELDS id: String, year: Int";
+        FIELDS id: Int, year: Int";
 
         db.execute_command(cmd).unwrap();
 
-        let cmd = "INSERT id = \"1\", year = 2002 INTO library";
+        let cmd = "INSERT id = 1, year = 2002 INTO library";
 
         db.execute_command(cmd).unwrap();
 
-        let cmd = "INSERT id = \"2\", year = 2001 INTO library";
+        let cmd = "INSERT id = 2, year = 2001 INTO library";
 
         db.execute_command(cmd).unwrap();
 
-        let cmd = "INSERT id = \"3\", year = 2000 INTO library";
+        let cmd = "INSERT id = 3, year = 2000 INTO library";
 
         db.execute_command(cmd).unwrap();
 
@@ -549,22 +549,22 @@ mod tests {
 
     #[test]
     fn test_parse_select_order_command() {
-        let mut db = Database::<String>::new();
+        let mut db = Database::<i64>::new();
 
         let cmd = "CREATE library KEY id
-        FIELDS id: String, year: Int";
+        FIELDS id: Int, year: Int";
 
         db.execute_command(cmd).unwrap();
 
-        let cmd = "INSERT id = \"1\", year = 2002 INTO library";
+        let cmd = "INSERT id = 1, year = 2002 INTO library";
 
         db.execute_command(cmd).unwrap();
 
-        let cmd = "INSERT id = \"2\", year = 2001 INTO library";
+        let cmd = "INSERT id = 2, year = 2001 INTO library";
 
         db.execute_command(cmd).unwrap();
 
-        let cmd = "INSERT id = \"3\", year = 2000 INTO library";
+        let cmd = "INSERT id = 3, year = 2000 INTO library";
 
         db.execute_command(cmd).unwrap();
 
@@ -575,14 +575,14 @@ mod tests {
         assert!(matches!(result, Ok(_)));
         if let Ok(ExecutionSuccessValue::SelectResult(r)) = result {
             assert_eq!(r.rows.len(), 3);
-            if let Value::String(id) = &r.rows[0].values[0].1 {
-                assert_eq!(id, "3")
+            if let Value::Int(id) = &r.rows[0].values[0].1 {
+                assert_eq!(*id, 3)
             }
-            if let Value::String(id) = &r.rows[1].values[0].1 {
-                assert_eq!(id, "2")
+            if let Value::Int(id) = &r.rows[1].values[0].1 {
+                assert_eq!(*id, 2)
             }
-            if let Value::String(id) = &r.rows[2].values[0].1 {
-                assert_eq!(id, "1")
+            if let Value::Int(id) = &r.rows[2].values[0].1 {
+                assert_eq!(*id, 1)
             }
         }
     }
@@ -620,18 +620,18 @@ mod tests {
 
     #[test]
     fn test_parse_save() {
-        let mut db = AnyDatabase::StringDatabase(Database::<String>::new());
+        let mut db = AnyDatabase::IntDatabase(Database::<i64>::new());
 
         db.execute_command("CREATE books KEY id
-             FIELDS id: String, year: Int"
+             FIELDS id: Int, year: Int"
         ).unwrap();
 
         db.execute_command(
-            "INSERT id = \"1\", year = 2000 INTO books"
+            "INSERT id = 1, year = 2000 INTO books"
         ).unwrap();
 
         db.execute_command(
-            "INSERT id = \"2\", year = 2001 INTO books"
+            "INSERT id = 2, year = 2001 INTO books"
         ).unwrap();
 
         let result = db.execute_command("SAVE_AS parse_save_test_output.txt");
@@ -640,8 +640,8 @@ mod tests {
         let file_contents = fs::read_to_string("parse_save_test_output.txt").unwrap();
 
         assert!(file_contents.contains("CREATE books KEY id"));
-        assert!(file_contents.contains("INSERT id = \"1\", year = 2000 INTO books"));
-        assert!(file_contents.contains("INSERT id = \"2\", year = 2001 INTO books"));
+        assert!(file_contents.contains("INSERT id = 1, year = 2000 INTO books"));
+        assert!(file_contents.contains("INSERT id = 2, year = 2001 INTO books"));
 
         fs::remove_file("parse_save_test_output.txt").unwrap();
     }
