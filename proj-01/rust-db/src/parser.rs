@@ -51,11 +51,14 @@ pub fn parse_command<'a, K: DatabaseKey>(input: &'a str, database: &'a mut Datab
     let mut pairs = match QueryParser::parse(Rule::command, input.trim()) {
         Ok(pairs) => pairs,
         Err(e) => {
-            return Err(Error::ParseError(
-                format!("Failed to parse command: {}", e)
-            ));
+            return Err(Error::ParseError(format!("Failed to parse command: {}", e)));
         }
     };
+
+    let parsed = pairs.as_str();
+    if parsed.len() != input.len() {
+        return Err(Error::ParseError(format!("Unexpected extra input after command: '{}'", &input[parsed.len()..])));
+    }
 
     let command_pair = expect_rule(pairs.next(), Rule::command, "Expected a command")?;
     let query = expect_any_rule(command_pair.into_inner().next(), "Empty command")?;
