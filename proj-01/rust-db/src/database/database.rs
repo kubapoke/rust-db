@@ -43,6 +43,10 @@ impl<K: DatabaseKey> Database<K> {
         let mut executable = parse_command(command, self)?;
         executable.execute()
     }
+    
+    pub fn get_session_commands(&self) -> &Vec<String> {
+        &self.session_commands
+    }
 }
 
 #[derive(Clone, Debug)]

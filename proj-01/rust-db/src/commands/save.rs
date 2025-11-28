@@ -3,18 +3,18 @@ use crate::commands::command::{Command, ExecutionSuccessValue};
 use crate::errors;
 use crate::errors::Error;
 
-pub struct SaveCommand {
+pub struct SaveCommand<'a> {
     path: String,
-    commands: Vec<String>
+    commands: &'a Vec<String>
 }
 
-impl SaveCommand {
-    pub fn new(path: String, commands: Vec<String>) -> Self {
+impl<'a> SaveCommand<'a> {
+    pub fn new(path: String, commands: &'a Vec<String>) -> Self {
         Self { path, commands }
     }
 }
 
-impl Command for SaveCommand {
+impl<'a> Command for SaveCommand<'_> {
     fn execute(&mut self) -> Result<ExecutionSuccessValue, errors::Error> {
         let commands = self.commands.join("\n");
         fs::write(self.path.clone(), commands)

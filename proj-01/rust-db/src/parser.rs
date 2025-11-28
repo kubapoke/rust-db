@@ -10,6 +10,8 @@ use crate::commands::command::AnyCommand;
 use crate::commands::create::CreateCommand;
 use crate::commands::delete::DeleteCommand;
 use crate::commands::insert::InsertCommand;
+use crate::commands::read::ReadCommand;
+use crate::commands::save::SaveCommand;
 use crate::commands::select::SelectCommand;
 use crate::database::database::Database;
 use crate::database::key::DatabaseKey;
@@ -176,6 +178,12 @@ pub fn parse_key_type_def(key_type_pair: Pair<Rule>) -> Result<KeyValue, Error> 
         Rule::int => parse_key_int(type_pair),
         _ => Err(Error::UnknownTokenError(String::from("Unknown or invalid type")))
     }
+}
+
+pub fn parse_path(path_pair: Pair<Rule>) -> Result<String, Error> {
+    let pair = expect_rule(Some(path_pair), Rule::path, "Expected a path")?;
+    let path = pair.as_str().to_string();
+    Ok(path)
 }
 
 pub fn parse_create_query<'a, K: DatabaseKey>(create_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
@@ -403,9 +411,17 @@ pub fn parse_delete_query<'a, K: DatabaseKey>(delete_query_pair: Pair<Rule>, dat
 }
 
 pub fn parse_read_query<'a, K: DatabaseKey>(read_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
-    todo!()
+    let path_rule = expect_rule(read_query_pair.into_inner().skip(1).next(), Rule::path, "Missing or invalid path")?;
+
+    let path = parse_path(path_rule)?;
+
+    Ok(AnyCommand::Read(ReadCommand::new(database, path)))
 }
 
 pub fn parse_save_query<'a, K: DatabaseKey>(save_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
-    todo!()
+    let path_rule = expect_rule(save_query_pair.into_inner().skip(1).next(), Rule::path, "Missing or invalid path")?;
+
+    let path = parse_path(path_rule)?;
+
+    Ok(AnyCommand::Save(SaveCommand::new(path, database.get_session_commands())))
 }

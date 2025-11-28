@@ -17,7 +17,7 @@ pub enum AnyCommand<'a, K: DatabaseKey> {
     Delete(DeleteCommand<'a, K>),
     Insert(InsertCommand<'a, K>),
     Read(ReadCommand<'a, K>),
-    Save(SaveCommand),
+    Save(SaveCommand<'a>),
     Select(SelectCommand<'a, K>),
 }
 
