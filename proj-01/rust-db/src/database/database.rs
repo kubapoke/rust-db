@@ -49,6 +49,12 @@ impl<K: DatabaseKey> Database<K> {
     }
 }
 
+impl<K: DatabaseKey> Default for Database<K> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum AnyDatabase {
     StringDatabase(Database<String>),

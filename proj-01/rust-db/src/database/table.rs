@@ -64,7 +64,7 @@ impl<K: DatabaseKey> Table<K> {
 
         let typed_key = K::from_value(key_value)?;
 
-        self.validate_new_key(&key_value, &typed_key)?;
+        self.validate_new_key(key_value, &typed_key)?;
 
         self.records.insert(typed_key, record);
 

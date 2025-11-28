@@ -52,7 +52,7 @@ pub fn parse_command<'a, K: DatabaseKey>(input: &'a str, database: &'a mut Datab
         Ok(pairs) => pairs,
         Err(e) => {
             return Err(Error::ParseError(
-                format!("Failed to parse command: {}", e.to_string())
+                format!("Failed to parse command: {}", e)
             ));
         }
     };
@@ -251,9 +251,9 @@ pub fn parse_select_query<'a, K: DatabaseKey>(select_query_pair: Pair<'a, Rule>,
 }
 
 pub fn parse_select_clause(select_clause_pair: Pair<Rule>) -> Result<Vec<String>, Error> {
-    let select_clause = select_clause_pair.into_inner();
+    let mut select_clause = select_clause_pair.into_inner();
     
-    let fields_pair = expect_rule(select_clause.skip(1).next(), Rule::ident_list, "Missing or invalid fields list")?;
+    let fields_pair = expect_rule(select_clause.nth(1), Rule::ident_list, "Missing or invalid fields list")?;
 
     let fields = parse_ident_list(fields_pair)?;
 
@@ -261,9 +261,9 @@ pub fn parse_select_clause(select_clause_pair: Pair<Rule>) -> Result<Vec<String>
 }
 
 pub fn parse_from_clause(from_clause_pair: Pair<Rule>) -> Result<String, Error> {
-    let from_clause = from_clause_pair.into_inner();
+    let mut from_clause = from_clause_pair.into_inner();
 
-    let ident_pair = expect_rule(from_clause.skip(1).next(), Rule::ident, "Missing or invalid identifier")?;
+    let ident_pair = expect_rule(from_clause.nth(1), Rule::ident, "Missing or invalid identifier")?;
 
     let ident = parse_ident(ident_pair)?;
 
@@ -271,9 +271,9 @@ pub fn parse_from_clause(from_clause_pair: Pair<Rule>) -> Result<String, Error> 
 }
 
 pub fn parse_where_clause(where_clause_pair: Pair<Rule>) -> Result<AnyClause, Error> {
-    let where_clause = where_clause_pair.into_inner();
+    let mut where_clause = where_clause_pair.into_inner();
 
-    let comparison_or_pair = expect_rule(where_clause.skip(1).next(), Rule::comparison_or, "Missing or invalid comparison")?;
+    let comparison_or_pair = expect_rule(where_clause.nth(1), Rule::comparison_or, "Missing or invalid comparison")?;
 
     let comparison = parse_comparison_or(comparison_or_pair)?;
 
@@ -284,7 +284,7 @@ pub fn parse_comparison_or(comparison_or_pair: Pair<Rule>) -> Result<AnyEvaluabl
     let mut comparison_or = comparison_or_pair.into_inner();
 
     let comparison_and_pair = expect_rule(comparison_or.next(), Rule::comparison_and, "Missing or invalid comparison")?;
-    let comparison_or_pair = possible_rule(comparison_or.skip(1).next(), Rule::comparison_or, "Invalid comparison")?;
+    let comparison_or_pair = possible_rule(comparison_or.nth(1), Rule::comparison_or, "Invalid comparison")?;
 
     let comparison_and = parse_comparison_and(comparison_and_pair)?;
 
@@ -300,7 +300,7 @@ pub fn parse_comparison_and(comparison_and_pair: Pair<Rule>) -> Result<AnyEvalua
     let mut comparison_and = comparison_and_pair.into_inner();
 
     let comparison_braced_pair = expect_rule(comparison_and.next(), Rule::comparison_braced, "Missing or invalid comparison")?;
-    let comparison_and_pair = possible_rule(comparison_and.skip(1).next(), Rule::comparison_and, "Invalid comparison")?;
+    let comparison_and_pair = possible_rule(comparison_and.nth(1), Rule::comparison_and, "Invalid comparison")?;
 
     let comparison_braced = parse_comparison_braced(comparison_braced_pair)?;
 
@@ -337,9 +337,9 @@ pub fn parse_comparison(comparison_pair: Pair<Rule>) -> Result<AnyEvaluable, Err
 }
 
 pub fn parse_order_clause(order_clause_pair: Pair<Rule>) -> Result<AnyClause, Error> {
-    let order_clause = order_clause_pair.into_inner();
+    let mut order_clause = order_clause_pair.into_inner();
 
-    let fields_pair = expect_rule(order_clause.skip(1).next(), Rule::ident_list, "Missing or invalid field list")?;
+    let fields_pair = expect_rule(order_clause.nth(1), Rule::ident_list, "Missing or invalid field list")?;
 
     let fields = parse_ident_list(fields_pair)?;
 
@@ -347,9 +347,9 @@ pub fn parse_order_clause(order_clause_pair: Pair<Rule>) -> Result<AnyClause, Er
 }
 
 pub fn parse_limit_clause(limit_clause_pair: Pair<Rule>) -> Result<AnyClause, Error> {
-    let order_clause = limit_clause_pair.into_inner();
+    let mut order_clause = limit_clause_pair.into_inner();
 
-    let amount_pair = expect_rule(order_clause.skip(1).next(), Rule::positive_int, "Missing or invalid field list")?;
+    let amount_pair = expect_rule(order_clause.nth(1), Rule::positive_int, "Missing or invalid field list")?;
 
     let amount = parse_positive_int(amount_pair)?;
 
@@ -408,7 +408,7 @@ pub fn parse_delete_query<'a, K: DatabaseKey>(delete_query_pair: Pair<Rule>, dat
 }
 
 pub fn parse_read_query<'a, K: DatabaseKey>(read_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
-    let path_rule = expect_rule(read_query_pair.into_inner().skip(1).next(), Rule::path, "Missing or invalid path")?;
+    let path_rule = expect_rule(read_query_pair.into_inner().nth(1), Rule::path, "Missing or invalid path")?;
 
     let path = parse_path(path_rule)?;
 
@@ -416,7 +416,7 @@ pub fn parse_read_query<'a, K: DatabaseKey>(read_query_pair: Pair<Rule>, databas
 }
 
 pub fn parse_save_query<'a, K: DatabaseKey>(save_query_pair: Pair<Rule>, database: &'a mut Database<K>) -> Result<AnyCommand<'a, K>, Error> {
-    let path_rule = expect_rule(save_query_pair.into_inner().skip(1).next(), Rule::path, "Missing or invalid path")?;
+    let path_rule = expect_rule(save_query_pair.into_inner().nth(1), Rule::path, "Missing or invalid path")?;
 
     let path = parse_path(path_rule)?;
 

@@ -7,7 +7,7 @@ pub struct WhereClause {
     pub evaluation: AnyEvaluable,
 }
 
-impl<'a> WhereClause {
+impl WhereClause {
     pub fn new(evaluation: AnyEvaluable) -> WhereClause {
         WhereClause { evaluation }
     }

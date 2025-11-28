@@ -14,7 +14,7 @@ impl<'a> SaveCommand<'a> {
     }
 }
 
-impl<'a> Command for SaveCommand<'_> {
+impl Command for SaveCommand<'_> {
     fn execute(&mut self) -> Result<ExecutionSuccessValue, errors::Error> {
         let commands = self.commands.join("\n");
         fs::write(self.path.clone(), commands)

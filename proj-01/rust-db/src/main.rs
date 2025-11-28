@@ -1,21 +1,19 @@
 use std::io::stdin;
 use clap::Parser;
 use rust_db::commands::command::ExecutionSuccessValue;
-use rust_db::database::database::{AnyDatabase, Database};
-use rust_db::database::key::DatabaseKey;
+use rust_db::database::database::{AnyDatabase};
 use rust_db::database::types::KeyType;
-use rust_db::errors::Error;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
     /// Name of the person to greet
-    #[arg(short, long, default_value = "String")]
+    #[arg(short, long, default_value = "Int")]
     key: String,
 }
 
-fn execute_command (database: &mut AnyDatabase, command_str: &String) -> () {
-    let result = database.execute_command(&command_str);
+fn execute_command (database: &mut AnyDatabase, command_str: &str) {
+    let result = database.execute_command(command_str);
 
     let result = match result {
         Ok(r) => r,
@@ -49,7 +47,7 @@ fn main() {
         if buffer.len() <= 1 { continue; }
 
         if buffer.starts_with("CREATE") {
-            let next_line = buffer.trim();
+            _ = buffer.trim();
             _ = stdin().read_line(&mut buffer);
         };
 

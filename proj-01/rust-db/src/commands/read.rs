@@ -17,7 +17,7 @@ impl<'a, K: DatabaseKey> ReadCommand<'a, K> {
 
     fn execute_command(&mut self, command_str: &String) -> Result<(), Error> {
         println!("{}", command_str);
-        let result = self.database.execute_command(&command_str)?;
+        let result = self.database.execute_command(command_str)?;
 
         match result {
             ExecutionSuccessValue::Success(msg) => println!("{}\n", msg),

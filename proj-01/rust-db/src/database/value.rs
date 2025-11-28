@@ -85,7 +85,7 @@ pub fn sort_compare_values(a: &Option<&Value>, b: &Option<&Value>) -> Ordering {
         (Some(Value::Bool(x)), Some(Value::Bool(y))) => x.cmp(y),
         (Some(Value::String(x)), Some(Value::String(y))) => x.cmp(y),
         (Some(Value::Int(x)), Some(Value::Int(y))) => x.cmp(y),
-        (Some(Value::Float(x)), Some(Value::Float(y))) => x.partial_cmp(y).unwrap_or_else(|| Ordering::Equal),
+        (Some(Value::Float(x)), Some(Value::Float(y))) => x.partial_cmp(y).unwrap_or(Ordering::Equal),
         (Some(va), Some(vb)) => va.value_order().cmp(&vb.value_order()),
     }
 }
