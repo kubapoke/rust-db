@@ -1,6 +1,6 @@
 ﻿use std::fs;
 use crate::commands::command::{Command, ExecutionSuccessValue};
-use crate::database::database::{Database};
+use crate::database::databases::{Database};
 use crate::database::key::DatabaseKey;
 use crate::errors;
 use crate::errors::Error;
@@ -20,7 +20,7 @@ impl<'a, K: DatabaseKey> ReadCommand<'a, K> {
         let result = self.database.execute_command(command_str)?;
 
         println!("{}", result);
-        
+
         Ok(())
     }
 }

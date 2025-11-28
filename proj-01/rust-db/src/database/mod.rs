@@ -1,4 +1,4 @@
-﻿pub mod database;
+﻿pub mod databases;
 pub mod key;
 pub mod record;
 pub mod table;
