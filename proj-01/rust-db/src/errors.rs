@@ -24,4 +24,6 @@ pub enum Error {
     InvalidComparisonError(String),
     #[error("IOError: {0}")]
     IOError(String),
+    #[error("IOError: {0}")]
+    KeyTypeError(String),
 }

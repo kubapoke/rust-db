@@ -2,6 +2,7 @@ use std::io::stdin;
 use clap::Parser;
 use rust_db::database::databases::{AnyDatabase};
 use rust_db::database::types::KeyType;
+use rust_db::errors::Error;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -14,38 +15,63 @@ struct Args {
 fn execute_command (database: &mut AnyDatabase, command_str: &str) {
     let result = database.execute_command(command_str);
 
-    let result = match result {
-        Ok(r) => r,
-        Err(e) => {
-            println!("{}", e);
-            return;
-        }
+    match result {
+        Ok(r) => { println!("{}", r); },
+        Err(e) => { println!("{}", e); },
     };
-
-    println!("{}", result);
 }
 
-fn main() {
-    let args = Args::parse();
+fn get_database (key_type: String) -> Result<AnyDatabase, Error> {
+    match key_type.as_str() {
+        "string" => Ok(AnyDatabase::new(KeyType::String)),
+        "int" => Ok(AnyDatabase::new(KeyType::Int)),
+        _ => { Err(Error::KeyTypeError(format!("{} is not an invalid key type", key_type))) },
+    }
+}
 
-    let mut db = match args.key.to_lowercase().as_str() {
-        "string" => AnyDatabase::new(KeyType::String),
-        "int" => AnyDatabase::new(KeyType::Int),
-        _ => { println!("Unsupported key type"); return },
+fn read_create_command(first: String) -> Result<String, Error> {
+    let mut next = String::new();
+    let bytes = read_line_trimmed(&mut next)?;
+    if bytes == 0 {
+        return Err(Error::IOError("Unexpected EOF".to_string()));
+    }
+    Ok(format!("{}\n{}", first, next))
+}
+
+fn read_line_trimmed (buf: &mut String) -> Result<usize, Error> {
+    buf.clear();
+    let n = stdin().read_line(buf)
+        .map_err(|e| Error::IOError(e.to_string()))?;
+    if n == 0 {
+        return Ok(0);
     };
+    *buf = buf.trim_end().to_string();
+    Ok(n)
+}
 
-    let mut buffer = String::new();
+fn main() -> Result<(), Error> {
+    let args = Args::parse();
+    let mut db = get_database(args.key.to_lowercase())?;
+    let mut line = String::new();
+
     loop {
-        buffer.clear();
-        _ = stdin().read_line(&mut buffer);
+        let bytes = read_line_trimmed(&mut line)?;
+        if bytes == 0 {
+            break;
+        }
+        if line.is_empty() {
+            continue;
+        }
 
-        if buffer.len() <= 1 { continue; }
-
-        if buffer.starts_with("CREATE") {
-            _ = buffer.trim();
-            _ = stdin().read_line(&mut buffer);
+        let command = if line.starts_with("CREATE") {
+            let line = read_create_command(line.clone())?;
+            line
+        } else {
+            line.clone()
         };
 
-        execute_command(&mut db, &buffer.to_string());
+        execute_command(&mut db, &command);
     }
+
+    Ok(())
 }
