@@ -78,7 +78,7 @@ limit_clause = { LIMIT ~ positive_int }
 
 // database queries
 select_query = { select_clause ~ from_clause ~ where_clause? ~ order_clause? ~ limit_clause? }
-create_query = { CREATE ~ ident ~ KEY ~ ident ~ (NEWLINE* ~ FIELDS) ~ decl_list }
+create_query = { CREATE ~ ident ~ KEY ~ ident ~ NEWLINE ~ FIELDS ~ decl_list }
 insert_query = { INSERT ~ assign_list ~ INTO ~ ident }
 delete_query = { DELETE ~ key_type_def ~ FROM ~ ident }
 save_query = { SAVE_AS ~ path }
