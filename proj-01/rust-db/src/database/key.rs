@@ -36,11 +36,11 @@ impl DatabaseKey for String {
 }
 impl DatabaseKey for i64 {
     fn get_key_type() -> KeyType {
-        KeyType::String
+        KeyType::Int
     }
 
     fn get_field_type() -> FieldType {
-        FieldType::String
+        FieldType::Int
     }
 
     fn from_value(v: &Value) -> Result<Self, Error> {
