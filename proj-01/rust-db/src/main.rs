@@ -7,7 +7,7 @@ use rust_db::errors::Error;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// Name of the person to greet
+    /// Type of the database key (Int/String)
     #[arg(short, long, default_value = "Int")]
     key: String,
 }
