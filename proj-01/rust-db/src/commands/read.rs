@@ -49,3 +49,32 @@ impl<'a, K: DatabaseKey> Command for ReadCommand<'a, K> {
         Ok(ExecutionSuccessValue::SuccessFileOperation(format!("Executed commands from {}", self.path)))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read() {
+        let script = "CREATE cars KEY id
+            FIELDS id: String, year: Int
+            INSERT id = \"x\", year = 1990 INTO cars
+            INSERT id = \"y\", year = 2000 INTO cars
+            ";
+
+        fs::write("read_test_input.txt", script).unwrap();
+
+        let mut db = Database::<String>::new();
+        let mut cmd = ReadCommand::new(&mut db, "read_test_input.txt".to_string());
+
+        let result = cmd.execute().unwrap();
+
+        assert!(matches!(result, ExecutionSuccessValue::SuccessFileOperation(_)));
+
+        let table = db.get_table(&"cars".to_string()).unwrap();
+
+        assert_eq!(table.len(), 2);
+
+        fs::remove_file("read_test_input.txt").unwrap();
+    }
+}

@@ -428,7 +428,9 @@ pub fn parse_save_query<'a, K: DatabaseKey>(save_query_pair: Pair<Rule>, databas
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
     use crate::commands::command::ExecutionSuccessValue;
+    use crate::database::databases::AnyDatabase;
     use crate::database::value::Value;
     use super::*;
 
@@ -614,5 +616,55 @@ mod tests {
         if let Ok(ExecutionSuccessValue::SelectResult(r)) = result {
             assert_eq!(r.rows.len(), 1);
         }
+    }
+
+    #[test]
+    fn test_parse_save() {
+        let mut db = AnyDatabase::StringDatabase(Database::<String>::new());
+
+        db.execute_command("CREATE books KEY id
+             FIELDS id: String, year: Int"
+        ).unwrap();
+
+        db.execute_command(
+            "INSERT id = \"1\", year = 2000 INTO books"
+        ).unwrap();
+
+        db.execute_command(
+            "INSERT id = \"2\", year = 2001 INTO books"
+        ).unwrap();
+
+        let result = db.execute_command("SAVE_AS parse_save_test_output.txt");
+        assert!(matches!(result, Ok(ExecutionSuccessValue::SuccessFileOperation(_))));
+
+        let file_contents = fs::read_to_string("parse_save_test_output.txt").unwrap();
+
+        assert!(file_contents.contains("CREATE books KEY id"));
+        assert!(file_contents.contains("INSERT id = \"1\", year = 2000 INTO books"));
+        assert!(file_contents.contains("INSERT id = \"2\", year = 2001 INTO books"));
+
+        fs::remove_file("parse_save_test_output.txt").unwrap();
+    }
+
+    #[test]
+    fn test_parse_read() {
+        let script = "CREATE cars KEY id
+            FIELDS id: String, year: Int
+            INSERT id = \"x\", year = 1990 INTO cars
+            INSERT id = \"y\", year = 2000 INTO cars
+            ";
+
+        fs::write("parse_read_test_input.txt", script).unwrap();
+
+        let mut db = Database::<String>::new();
+        let result = db.execute_command("READ_FROM parse_read_test_input.txt");
+
+        assert!(matches!(result, Ok(ExecutionSuccessValue::SuccessFileOperation(_))));
+
+        let table = db.get_table(&"cars".to_string()).unwrap();
+
+        assert_eq!(table.len(), 2);
+
+        fs::remove_file("parse_read_test_input.txt").unwrap();
     }
 }
