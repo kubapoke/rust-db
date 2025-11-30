@@ -1,20 +1,60 @@
-﻿## Struktura projektu
-Plik `main.rs` zawiera główną logikę przetwarzania poleceń z konsoli.
+﻿# Rust DB
 
-Plik `lib.rs` zawiera definicje głównych modułów biblioteki:
-- `commands` - zawiera struktury reprezentujące pojedyncze zapytania bazy danych, 
-    oraz podmoduł `clauses` zawierający klauzule polecenia `SELECT`.
-- `database`- zawiera logikę obiektu bazy danych, tabel, rekordów
-    oraz wykorzystywanych w bazie typów.
-- `parser` - zawiera logikę parsera poleceń zaimplementowanego
-    z wykorzystaniem biblioteki `pest`.
-- `errors` - zawiera wykorzystywany w projekcie zbiór błędów.
+A small SQL-like in-memory database written in Rust.  
+Parsing is implemented using the `pest` grammar engine.
 
-## Ulubiony moduł
-Powiedziałbym, że mój ulubiony moduł w projekcie to `parser`.
-Zacząłem cały projekt od napisania gramatyki i fajnie się później
-patrzyło jak kolejne jej ścieżki zostają zaimplementowane.
+## Running
 
-Tutaj w szczególności podobała mi się implementacja logiki
-OR/AND, która z pewnością była ułatwiona poprzez wcześniejszą
-implementację gramatyki.
+```bash
+cargo run [--key int|string]
+```
+
+The `--key` argument selects the key type of the database (`Int` or `String`).
+
+## Supported Queries
+
+- CREATE
+  ```
+  CREATE <table> KEY <key-name>
+  FIELDS <field-1>: <type>, <field-2>: <type>, ...
+  ```
+
+- INSERT
+  ```
+  INSERT <field-1>=<value>, <field-2>=<value>, ... INTO <table>
+  ```
+
+- DELETE
+  ```
+  DELETE <key-value> FROM <table>
+  ```
+
+- SELECT
+  ```
+  SELECT <field-1>, <field-2>, ... FROM <table>
+    [WHERE <conditions>]
+    [ORDER_BY <field-1>, <field-2>, ...]
+    [LIMIT <number>]
+  ```
+
+- READ_FROM
+  ```
+  READ_FROM <file>
+  ```
+
+- SAVE_AS
+  ```
+  SAVE_AS <file>
+  ```
+
+## Example
+
+```
+CREATE users KEY id
+FIELDS id: Int, name: String
+
+INSERT id=1, name="Alice" INTO users
+INSERT id=2, name="Bob" INTO users
+
+SELECT id, name FROM users WHERE id > 1
+```
